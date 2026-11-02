@@ -14,6 +14,7 @@ A showcase app for trying different Hyprland shells. Built with Quickshell.
 ## Installation
 
 ```bash
+git clone https://github.com/lachaise97420/WorldOfShells.git
 bash install.sh
 ```
 
@@ -31,12 +32,13 @@ qs -c WorldOfShells
 
 Or find "World of Shells" in your app launcher.
 
-## Shells included (14)
+## Shells included (17)
 
 | Shell | Stars | License | Activation |
 |-------|-------|---------|------------|
 | MacShell | 328 | MIT | Start qs -c MacShell |
 | end-4 (illogical-impulse) | 16.5k | GPL-3.0 | Full dotfiles install (confirmation required) |
+| ghOSt | 5 | None | ghost start |
 | DankMaterialShell (DMS) | 8.7k | MIT | Start dms run |
 | Nucleus Shell | 721 | GPL-3.0 | Start qs -c nucleus-shell |
 | Nandoroid | 179 | AGPL-3.0 | Start qs -c nandoroid |
@@ -49,11 +51,17 @@ Or find "World of Shells" in your app launcher.
 | Ukishima | 119 | MIT | Start qs -c ukishima |
 | Lucid | 322 | MIT | Start qs -c lucid |
 | Nothingshell | 26 | MIT | Start qs -c nothingshell |
+| NibrasShell |  |  | Start qs -c nibras |
+| Impasto |  |  | Start qs -c impasto |
+
+## Installing a shell
+
+Install clones the shell's repo and runs its own installer in a terminal. View script fetches that installer from the repo first. Shells with no script in their repo have neither.
 
 ## Features
-- Browse 14 shells with screenshots
-- Click "Activer" to try a shell (stops current, starts new one)
-- Click "Revenir" to restore your previous shell
+- Browse 17 shells with screenshots
+- Click "Activate" to try an installed shell (stops current, starts new one)
+- Click "Revert" to stop it and restore ghOSt
 - Image lightbox with zoom/pan
 - Matugen-friendly (reads colors from ~/.cache/ryoku/colors.json if available)
 - Settings button (placeholder)

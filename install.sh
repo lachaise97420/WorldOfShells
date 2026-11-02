@@ -12,11 +12,11 @@ echo "=== World of Shells - Installation ==="
 echo ""
 
 # Check dependencies
-echo "Vérification des dépendances..."
+echo "Checking dependencies..."
 for dep in qs quickshell; do
     if ! command -v "$dep" >/dev/null 2>&1; then
-        echo "ERREUR: $dep n'est pas installé."
-        echo "Installez Quickshell: https://quickshell.org"
+        echo "ERROR: $dep is not installed."
+        echo "Install Quickshell: https://quickshell.org"
         exit 1
     fi
 done
@@ -24,11 +24,11 @@ echo "Quickshell: OK"
 
 # Check Hyprland
 if ! command -v hyprctl >/dev/null 2>&1; then
-    echo "ATTENTION: hyprctl non trouvé. Hyprland est requis."
+    echo "WARNING: hyprctl not found. Hyprland is required."
 fi
 
 # Install app files
-echo "Installation des fichiers..."
+echo "Installing files..."
 mkdir -p "$APP_DIR"
 cp -r "$SCRIPT_DIR"/* "$APP_DIR/"
 chmod +x "$APP_DIR"/*.sh
@@ -50,9 +50,9 @@ EOF
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 
 echo ""
-echo "=== Installation terminée ==="
-echo "Lancez l'app avec: qs -c WorldOfShells"
-echo "Ou depuis le lanceur d'applications: World of Shells"
+echo "=== Installation complete ==="
+echo "Start the app with: qs -c WorldOfShells"
+echo "Or from your app launcher: World of Shells"
 echo ""
-echo "Note: Pour les shells nécessitant une installation (end-4, DMS),"
-echo "suivez les instructions affichées dans l'application."
+echo "Note: for shells that need installing (end-4, DMS),"
+echo "follow the instructions shown in the app."

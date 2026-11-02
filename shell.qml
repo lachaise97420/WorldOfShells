@@ -5,6 +5,37 @@ import Quickshell
 import Quickshell.Io
 
 ShellRoot {
+    component ActionButton: Rectangle {
+        id: button
+        property string text: ""
+        property bool primary: false
+        signal clicked
+        implicitWidth: Math.max(96, buttonLabel.implicitWidth + tok.sp4 * 2)
+        implicitHeight: 44
+        radius: tok.r3
+        color: primary ? (buttonMouse.containsMouse ? "#a6dcfa" : tok.primary) : (buttonMouse.containsMouse ? tok.surfaceHigh : "transparent")
+        border.width: primary ? 0 : 1
+        border.color: tok.outlineVariant
+        opacity: enabled ? 1 : 0.45
+        Behavior on color { ColorAnimation { duration: tok.animFast } }
+        Text {
+            id: buttonLabel
+            anchors.centerIn: parent
+            text: button.text
+            font.pixelSize: 13
+            font.weight: Font.DemiBold
+            color: button.primary ? tok.fgOnPrimary : tok.fg
+        }
+        MouseArea {
+            id: buttonMouse
+            anchors.fill: parent
+            enabled: button.enabled
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: button.clicked()
+        }
+    }
+
     Component.onCompleted: Quickshell.watchFiles = false
 
     QtObject {
@@ -81,15 +112,15 @@ ShellRoot {
             forks: "27",
             github: "https://github.com/0-ss/MacShell",
             video: "",
-            tagline: "Barre de menus + Dock façon macOS Tahoe pour Hyprland.",
-            bio: "Barre de menus + Dock façon macOS Tahoe. Liquid Glass, Spotlight, widgets, MacLock.",
-            features: ["Liquid Glass", "Spotlight", "Widgets", "Captures d'écran", "MacLock", "Alt+Tab"],
-            prereqs: "Hyprland 0.55+ (config Lua), Quickshell 0.3.0+, Qt 6.5+, qsb.",
+            tagline: "macOS Tahoe style menu bar and Dock for Hyprland.",
+            bio: "macOS Tahoe style menu bar and Dock. Liquid Glass, Spotlight, widgets, MacLock.",
+            features: ["Liquid Glass", "Spotlight", "Widgets", "Screenshots", "MacLock", "Alt+Tab"],
+            prereqs: "Hyprland 0.55+ (Lua config), Quickshell 0.3.0+, Qt 6.5+, qsb.",
             logo: "https://github.com/user-attachments/assets/bc67b3fa-33a6-4326-9752-f0d271d0ed22",
             featured: "https://github.com/user-attachments/assets/600f75bc-b4d1-442d-bec5-41ee7dfa5023",
             thumbs: ["https://github.com/user-attachments/assets/edf45f8f-b71a-4bc5-9880-46dafbebf47c", "https://github.com/user-attachments/assets/cb6c5708-5786-4328-89bd-24737d39e482", "https://github.com/user-attachments/assets/6ef28e50-612f-4e7b-9822-c0aa0168a6ae"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/revert.sh",
+            activateScript: Quickshell.shellPath("activate.sh"),
+            revertScript: Quickshell.shellPath("revert.sh"),
             activatable: true
         },
         {
@@ -100,15 +131,34 @@ ShellRoot {
             forks: "1.4k",
             github: "https://github.com/end-4/dots-hyprland",
             video: "https://www.youtube.com/watch?v=RPwovTInagE",
-            tagline: "Dotfiles usability-first pour Hyprland. Material Design 3, IA intégrée, widgets riches.",
-            bio: "Dotfiles « usability-first » pour Hyprland. Material Design 3, IA intégrée, widgets riches, sidebar, launcher. Très populaire (16.5k étoiles).",
-            features: ["Material Design 3", "IA intégrée", "Widgets riches", "Sidebar", "Lock screen", "Thèmes dynamiques"],
-            prereqs: "Hyprland 0.55+, Quickshell, Qt 6, Arch Linux recommandé.",
+            tagline: "Usability-first dotfiles for Hyprland. Material Design 3, built-in AI, rich widgets.",
+            bio: "Usability-first dotfiles for Hyprland. Material Design 3, built-in AI, rich widgets, sidebar, launcher. Very popular (16.5k stars).",
+            features: ["Material Design 3", "Built-in AI", "Rich widgets", "Sidebar", "Lock screen", "Dynamic themes"],
+            prereqs: "Hyprland 0.55+, Quickshell, Qt 6, Arch Linux recommended.",
             logo: "https://github.com/user-attachments/assets/9d7af13f-89ef-470d-ba78-d2288b79cf60",
             featured: "https://github.com/user-attachments/assets/5d4e7d07-d0b4-4406-a4c9-ed7ba90e3fe4",
             thumbs: ["https://github.com/user-attachments/assets/6a32395f-9437-4192-8faf-2951a9e84cbe", "https://github.com/user-attachments/assets/c51bed8b-3670-4d4c-9074-873be224fb8e", "https://github.com/user-attachments/assets/98703a66-0743-439f-a721-cef7afa6ab95"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/end4-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/end4-revert.sh",
+            activateScript: Quickshell.shellPath("end4-activate.sh"),
+            revertScript: Quickshell.shellPath("end4-revert.sh"),
+            activatable: true
+        },
+        {
+            name: "ghOSt",
+            author: "dsksnkz",
+            license: "None",
+            stars: "5",
+            forks: "0",
+            github: "https://github.com/dsksnkz/ghOSt",
+            video: "",
+            tagline: "Monochrome desktop shell for Arch Linux and Hyprland.",
+            bio: "Monochrome desktop shell with a slim top bar, Super+Tab desktop switcher, Magic Workspaces, calendar, sidebar, music player, launcher, Settings and lock screen.",
+            features: ["Top bar", "Desktop switcher", "Calendar", "Music player", "Launcher", "Lock screen"],
+            prereqs: "Arch Linux, Hyprland, Quickshell.",
+            logo: "https://raw.githubusercontent.com/dsksnkz/ghOSt/main/site/assets/icons/white/ghost.svg",
+            featured: "https://raw.githubusercontent.com/dsksnkz/ghOSt/main/site/assets/product/desktop.webp",
+            thumbs: ["switcher", "calendar", "settings", "launcher", "media", "sidebar", "login"].map(name => "https://raw.githubusercontent.com/dsksnkz/ghOSt/main/site/assets/product/" + name + ".webp"),
+            activateScript: Quickshell.shellPath("ghost-activate.sh"),
+            revertScript: Quickshell.shellPath("ghost-revert.sh"),
             activatable: true
         },
         {
@@ -119,15 +169,15 @@ ShellRoot {
             forks: "575",
             github: "https://github.com/duxlabs-dev/dux-shell",
             video: "",
-            tagline: "Shell Material Design 3 pour Hyprland, Niri, Sway et plus.",
-            bio: "Shell complet pour Wayland. Material Design 3, panneaux, widgets, thèmes dynamiques, notifications, launcher, lock screen. Multi-compositor.",
-            features: ["Material Design 3", "Panneaux & widgets", "Thèmes dynamiques", "Notifications", "Launcher", "Multi-compositor"],
+            tagline: "Material Design 3 shell for Hyprland, Niri, Sway and more.",
+            bio: "Complete shell for Wayland. Material Design 3, panels, widgets, dynamic themes, notifications, launcher, lock screen. Multi-compositor.",
+            features: ["Material Design 3", "Panels & widgets", "Dynamic themes", "Notifications", "Launcher", "Multi-compositor"],
             prereqs: "Hyprland/Niri/Sway, Quickshell, Go.",
             logo: "https://github.com/user-attachments/assets/203a9678-c3b7-4720-bb97-853a511ac5c8",
             featured: "https://github.com/user-attachments/assets/732c30de-5f4a-4a2b-a995-c8ab656cecd5",
             thumbs: ["https://github.com/user-attachments/assets/a937cf35-a43b-4558-8c39-5694ff5fcac4", "https://github.com/user-attachments/assets/2da00ea1-8921-4473-a2a9-44a44535a822", "https://github.com/user-attachments/assets/732c30de-5f4a-4a2b-a995-c8ab656cecd5"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/dms-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/dms-revert.sh",
+            activateScript: Quickshell.shellPath("dms-activate.sh"),
+            revertScript: Quickshell.shellPath("dms-revert.sh"),
             activatable: true
         },
         {
@@ -138,15 +188,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/nucleus-hq/nucleus-shell",
             video: "",
-            tagline: "Shell flexible et extensible, QML/C++/JS.",
-            bio: "Shell de bureau flexible et extensible, construit avec QML, C++ et JavaScript. Quickshell-based. Modulaire et personnalisable.",
-            features: ["Extensible", "Modulaire", "Multi-compositor", "Personnalisable"],
+            tagline: "Flexible, extensible shell in QML, C++ and JS.",
+            bio: "Flexible, extensible desktop shell built with QML, C++ and JavaScript. Quickshell-based. Modular and customizable.",
+            features: ["Extensible", "Modular", "Multi-compositor", "Customizable"],
             prereqs: "Hyprland/Niri, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/nucleus-hq/nucleus-shell/main/previews/Forests.png",
             featured: "https://raw.githubusercontent.com/nucleus-hq/nucleus-shell/main/previews/Passion.png",
             thumbs: ["https://raw.githubusercontent.com/nucleus-hq/nucleus-shell/main/previews/Forests.png", "https://raw.githubusercontent.com/nucleus-hq/nucleus-shell/main/previews/Love.png", "https://raw.githubusercontent.com/nucleus-hq/nucleus-shell/main/previews/Metallic.png"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/nucleus-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/nucleus-revert.sh",
+            activateScript: Quickshell.shellPath("nucleus-activate.sh"),
+            revertScript: Quickshell.shellPath("nucleus-revert.sh"),
             activatable: true
         },
         {
@@ -157,15 +207,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/na-ive/nandoroid-shell",
             video: "",
-            tagline: "Shell Hyprland inspiré des ROM Android custom.",
-            bio: "Shell opinionné pour Hyprland, inspiré des ROM Android custom. Quickshell-based, avec dynamic island, widgets, notifications.",
-            features: ["Dynamic Island", "Widgets", "Notifications", "Thèmes", "Android-inspired"],
+            tagline: "Hyprland shell inspired by custom Android ROMs.",
+            bio: "Opinionated Hyprland shell inspired by custom Android ROMs. Quickshell-based, with a dynamic island, widgets and notifications.",
+            features: ["Dynamic Island", "Widgets", "Notifications", "Themes", "Android-inspired"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/na-ive/nandoroid-docs/refs/heads/main/public/showcase1.png",
             featured: "https://raw.githubusercontent.com/na-ive/nandoroid-docs/refs/heads/main/public/showcase1.png",
             thumbs: ["https://raw.githubusercontent.com/na-ive/nandoroid-docs/refs/heads/main/public/showcase2.png", "https://raw.githubusercontent.com/na-ive/nandoroid-docs/refs/heads/main/public/showcase3.png", "https://raw.githubusercontent.com/na-ive/nandoroid-docs/refs/heads/main/public/showcase4.png"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/nandoroid-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/nandoroid-revert.sh",
+            activateScript: Quickshell.shellPath("nandoroid-activate.sh"),
+            revertScript: Quickshell.shellPath("nandoroid-revert.sh"),
             activatable: true
         },
         {
@@ -176,15 +226,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/Blapples/SekaiPop",
             video: "",
-            tagline: "Shell inspiré de Project Sekai. Vibe-coded, passion project.",
-            bio: "Shell inspiré de Project Sekai, avec control center, equalizer, edit desktop, shader transitions, deux lockscreens. Passion project vibe-coded.",
+            tagline: "Shell inspired by Project Sekai. Vibe-coded passion project.",
+            bio: "Shell inspired by Project Sekai, with a control center, equalizer, desktop editing, shader transitions and two lock screens. Vibe-coded passion project.",
             features: ["Control center", "Equalizer", "Edit desktop", "Shader transitions", "Lock screens", "Phone integration"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/Blapples/SekaiPop/main/assets/shot-desktop-widgets.png",
             featured: "https://raw.githubusercontent.com/Blapples/SekaiPop/main/assets/shot-desktop-widgets.png",
             thumbs: ["https://raw.githubusercontent.com/Blapples/SekaiPop/main/assets/shot-edit-desktop.png", "https://raw.githubusercontent.com/Blapples/SekaiPop/main/assets/shot-quick-panel-phone.png", "https://raw.githubusercontent.com/Blapples/SekaiPop/main/assets/shot-sekai-pad-eq.png"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/sekaipop-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/sekaipop-revert.sh",
+            activateScript: Quickshell.shellPath("sekaipop-activate.sh"),
+            revertScript: Quickshell.shellPath("sekaipop-revert.sh"),
             activatable: true
         },
         {
@@ -195,15 +245,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/etherealboi/twinshell",
             video: "",
-            tagline: "Shell clavier-centrique pour Hyprland.",
-            bio: "Shell clavier-centrique pour Hyprland, avec barre, screenshot tool, screen recording. Minimal et fonctionnel.",
-            features: ["Barre", "Workspaces", "Screenshot", "Screen recording", "Audio", "Network"],
+            tagline: "Keyboard-centric shell for Hyprland.",
+            bio: "Keyboard-centric shell for Hyprland, with a bar, screenshot tool and screen recording. Minimal and functional.",
+            features: ["Bar", "Workspaces", "Screenshot", "Screen recording", "Audio", "Network"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://opengraph.githubassets.com/1/etherealboi/twinshell",
             featured: "https://opengraph.githubassets.com/1/etherealboi/twinshell",
             thumbs: ["https://opengraph.githubassets.com/1/etherealboi/twinshell", "https://opengraph.githubassets.com/1/etherealboi/twinshell", "https://opengraph.githubassets.com/1/etherealboi/twinshell"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/twinshell-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/twinshell-revert.sh",
+            activateScript: Quickshell.shellPath("twinshell-activate.sh"),
+            revertScript: Quickshell.shellPath("twinshell-revert.sh"),
             activatable: true
         },
         {
@@ -214,15 +264,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/BelimFaux/qsdots",
             video: "",
-            tagline: "Dotfiles quickshell pour Hyprland.",
-            bio: "Dotfiles quickshell pour Hyprland. Barre, notifications, OSD, lockscreen, mediaplayer, services.",
-            features: ["Barre", "Notifications", "OSD", "Lockscreen", "Mediaplayer", "Services"],
+            tagline: "Quickshell dotfiles for Hyprland.",
+            bio: "Quickshell dotfiles for Hyprland. Bar, notifications, OSD, lock screen, media player, services.",
+            features: ["Bar", "Notifications", "OSD", "Lockscreen", "Mediaplayer", "Services"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/BelimFaux/qsdots/main/examples/desktop.png",
             featured: "https://raw.githubusercontent.com/BelimFaux/qsdots/main/examples/desktop.png",
             thumbs: ["https://raw.githubusercontent.com/BelimFaux/qsdots/main/examples/desktop.png", "https://raw.githubusercontent.com/BelimFaux/qsdots/main/examples/desktop.png", "https://raw.githubusercontent.com/BelimFaux/qsdots/main/examples/desktop.png"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/qsdots-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/qsdots-revert.sh",
+            activateScript: Quickshell.shellPath("qsdots-activate.sh"),
+            revertScript: Quickshell.shellPath("qsdots-revert.sh"),
             activatable: true
         },
         {
@@ -233,15 +283,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/AsakiYuki/quickshell",
             video: "",
-            tagline: "Shell simple pour Hyprland.",
-            bio: "Shell simple pour Hyprland, avec barre, modules, configuration. Minimal et fonctionnel.",
-            features: ["Barre", "Modules", "Configuration", "Wallpaper"],
+            tagline: "Simple shell for Hyprland.",
+            bio: "Simple shell for Hyprland, with a bar, modules and configuration. Minimal and functional.",
+            features: ["Bar", "Modules", "Configuration", "Wallpaper"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://opengraph.githubassets.com/1/AsakiYuki/quickshell",
             featured: "https://opengraph.githubassets.com/1/AsakiYuki/quickshell",
             thumbs: ["https://opengraph.githubassets.com/1/AsakiYuki/quickshell", "https://opengraph.githubassets.com/1/AsakiYuki/quickshell", "https://opengraph.githubassets.com/1/AsakiYuki/quickshell"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/asaki-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/asaki-revert.sh",
+            activateScript: Quickshell.shellPath("asaki-activate.sh"),
+            revertScript: Quickshell.shellPath("asaki-revert.sh"),
             activatable: true
         },
         {
@@ -252,15 +302,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/ps2string/quickshell-materialui",
             video: "",
-            tagline: "Shell Material Design 3 pour Hyprland.",
-            bio: "Shell Material Design 3 pour Hyprland, avec barre, launcher, quicksettings, dock. Android 16 M3 UI.",
-            features: ["Material Design 3", "Barre", "Launcher", "Quick settings", "Dock", "Android M3"],
+            tagline: "Material Design 3 shell for Hyprland.",
+            bio: "Material Design 3 shell for Hyprland, with a bar, launcher, quick settings and dock. Android 16 M3 UI.",
+            features: ["Material Design 3", "Bar", "Launcher", "Quick settings", "Dock", "Android M3"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://opengraph.githubassets.com/1/ps2string/quickshell-materialui",
             featured: "https://opengraph.githubassets.com/1/ps2string/quickshell-materialui",
             thumbs: ["https://opengraph.githubassets.com/1/ps2string/quickshell-materialui", "https://opengraph.githubassets.com/1/ps2string/quickshell-materialui", "https://opengraph.githubassets.com/1/ps2string/quickshell-materialui"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/materialui-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/materialui-revert.sh",
+            activateScript: Quickshell.shellPath("materialui-activate.sh"),
+            revertScript: Quickshell.shellPath("materialui-revert.sh"),
             activatable: true
         },
         {
@@ -271,15 +321,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/simeulinuxkaliaiwr/vantage",
             video: "",
-            tagline: "Shell simple et minimal pour Hyprland.",
-            bio: "Shell simple et minimal pour Hyprland, avec barre, widgets, wallpaper picker, game mode, keep-awake. Installateur inclus.",
-            features: ["Barre", "Widgets", "Wallpaper picker", "Game mode", "Keep-awake", "Night light"],
+            tagline: "Simple, minimal shell for Hyprland.",
+            bio: "Simple, minimal shell for Hyprland, with a bar, widgets, wallpaper picker, game mode and keep-awake. Installer included.",
+            features: ["Bar", "Widgets", "Wallpaper picker", "Game mode", "Keep-awake", "Night light"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://opengraph.githubassets.com/1/simeulinuxkaliaiwr/vantage",
             featured: "https://opengraph.githubassets.com/1/simeulinuxkaliaiwr/vantage",
             thumbs: ["https://opengraph.githubassets.com/1/simeulinuxkaliaiwr/vantage", "https://opengraph.githubassets.com/1/simeulinuxkaliaiwr/vantage", "https://opengraph.githubassets.com/1/simeulinuxkaliaiwr/vantage"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/vantage-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/vantage-revert.sh",
+            activateScript: Quickshell.shellPath("vantage-activate.sh"),
+            revertScript: Quickshell.shellPath("vantage-revert.sh"),
             activatable: true
         },
         {
@@ -290,15 +340,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/amanhex/ukishima",
             video: "",
-            tagline: "Shell pill/bar pour Hyprland. Compositor-aware.",
-            bio: "Shell pill/bar pour Hyprland avec compositor-aware workspaces, window state, keyboard layout, lock backends. Extras: night light, game mode, keep-awake, in-app updater.",
+            tagline: "Pill bar shell for Hyprland. Compositor-aware.",
+            bio: "Pill bar shell for Hyprland with compositor-aware workspaces, window state, keyboard layout and lock backends. Extras: night light, game mode, keep-awake, in-app updater.",
             features: ["Pill bar", "Compositor-aware", "Night light", "Game mode", "Keep-awake", "In-app updater"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/amanhex/Ukishima/master/assets/ukishima-readme-banner.png",
             featured: "https://raw.githubusercontent.com/amanhex/Ukishima/master/assets/ukishima-readme-banner.png",
             thumbs: ["https://raw.githubusercontent.com/amanhex/Ukishima/master/assets/ukishima-readme-banner.png", "https://raw.githubusercontent.com/amanhex/Ukishima/master/assets/ukishima-readme-banner.png", "https://raw.githubusercontent.com/amanhex/Ukishima/master/assets/ukishima-readme-banner.png"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/ukishima-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/ukishima-revert.sh",
+            activateScript: Quickshell.shellPath("ukishima-activate.sh"),
+            revertScript: Quickshell.shellPath("ukishima-revert.sh"),
             activatable: true
         },
         {
@@ -309,15 +359,15 @@ ShellRoot {
             forks: "12",
             github: "https://github.com/sn3akyy1/lucid",
             video: "",
-            tagline: "Shell dynamique pour Hyprland.",
-            bio: "Shell dynamique pour Hyprland avec barre, dock, widgets, lock screen, thèmes. Inspiré de Caelestia.",
-            features: ["Barre", "Dock", "Widgets", "Lock screen", "Thèmes", "Dynamic colors"],
+            tagline: "Dynamic shell for Hyprland.",
+            bio: "Dynamic shell for Hyprland with a bar, dock, widgets, lock screen and themes. Inspired by Caelestia.",
+            features: ["Bar", "Dock", "Widgets", "Lock screen", "Themes", "Dynamic colors"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/Sn3akyy1/lucid/main/assets/fallback.jpg",
             featured: "https://raw.githubusercontent.com/Sn3akyy1/lucid/main/assets/fallback.jpg",
             thumbs: ["https://raw.githubusercontent.com/Sn3akyy1/lucid/main/assets/fallback.jpg", "https://raw.githubusercontent.com/Sn3akyy1/lucid/main/assets/fallback.jpg", "https://raw.githubusercontent.com/Sn3akyy1/lucid/main/assets/fallback.jpg"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/lucid-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/lucid-revert.sh",
+            activateScript: Quickshell.shellPath("lucid-activate.sh"),
+            revertScript: Quickshell.shellPath("lucid-revert.sh"),
             activatable: true
         },
         {
@@ -328,15 +378,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/Tsunami43/nothingshell",
             video: "",
-            tagline: "Shell complet pour Hyprland en un processus.",
-            bio: "Shell complet pour Hyprland en un seul processus Quickshell : barre, dashboard, launcher, settings, lock et login screen.",
-            features: ["Barre", "Dashboard", "Launcher", "Settings", "Lock screen", "Login screen"],
+            tagline: "Complete shell for Hyprland in one process.",
+            bio: "Complete shell for Hyprland in a single Quickshell process: bar, dashboard, launcher, settings, lock and login screens.",
+            features: ["Bar", "Dashboard", "Launcher", "Settings", "Lock screen", "Login screen"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/Tsunami43/nothingshell/master/.github/assets/screenshots.jpg",
             featured: "https://raw.githubusercontent.com/Tsunami43/nothingshell/master/.github/assets/screenshots.jpg",
             thumbs: ["https://raw.githubusercontent.com/Tsunami43/nothingshell/master/.github/assets/demo.gif", "https://raw.githubusercontent.com/Tsunami43/nothingshell/master/.github/assets/screenshots.jpg", "https://raw.githubusercontent.com/Tsunami43/nothingshell/master/.github/assets/screenshots.jpg"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/nothingshell-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/nothingshell-revert.sh",
+            activateScript: Quickshell.shellPath("nothingshell-activate.sh"),
+            revertScript: Quickshell.shellPath("nothingshell-revert.sh"),
             activatable: true
         },
         {
@@ -347,15 +397,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/AhmedSaadi0/NibrasShell",
             video: "",
-            tagline: "Shell AI-intégré pour Hyprland. Material Design 3.",
-            bio: "Shell AI-intégré pour Hyprland. Material Design 3, Claude AI, live wallpaper theming, widgets, animations. Anglais et russe.",
-            features: ["AI intégré", "Material Design 3", "Live theming", "Widgets", "Animations", "Multi-langue"],
+            tagline: "Shell with built-in AI for Hyprland. Material Design 3.",
+            bio: "Shell with built-in AI for Hyprland. Material Design 3, Claude AI, live wallpaper theming, widgets, animations. English and Russian.",
+            features: ["Built-in AI", "Material Design 3", "Live theming", "Widgets", "Animations", "Multilingual"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://raw.githubusercontent.com/AhmedSaadi0/my-hyprland-config/main/screenshots/dark_1.png",
             featured: "https://raw.githubusercontent.com/AhmedSaadi0/my-hyprland-config/main/screenshots/dark_1.png",
             thumbs: ["https://raw.githubusercontent.com/AhmedSaadi0/my-hyprland-config/main/screenshots/dark_2.png", "https://raw.githubusercontent.com/AhmedSaadi0/my-hyprland-config/main/screenshots/dark_3.png", "https://raw.githubusercontent.com/AhmedSaadi0/my-hyprland-config/main/screenshots/dark_4.png"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/nibras-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/nibras-revert.sh",
+            activateScript: Quickshell.shellPath("nibras-activate.sh"),
+            revertScript: Quickshell.shellPath("nibras-revert.sh"),
             activatable: true
         },
         {
@@ -366,15 +416,15 @@ ShellRoot {
             forks: "0",
             github: "https://github.com/andreumassanet/impasto",
             video: "",
-            tagline: "Shell dynamique avec îlot, widgets, notes et tâches.",
-            bio: "Shell dynamique pour Hyprland avec îlot dynamique, widgets desktop, notes et tâches, one-script installer. Inspiré de caelestia.",
-            features: ["Dynamic island", "Widgets", "Notes", "Tasks", "Thèmes", "Installer"],
+            tagline: "Dynamic shell with an island, widgets, notes and tasks.",
+            bio: "Dynamic shell for Hyprland with a dynamic island, desktop widgets, notes and tasks, and a one-script installer. Inspired by Caelestia.",
+            features: ["Dynamic island", "Widgets", "Notes", "Tasks", "Themes", "Installer"],
             prereqs: "Hyprland, Quickshell, Qt 6.",
             logo: "https://opengraph.githubassets.com/1/andreumassanet/impasto",
             featured: "https://opengraph.githubassets.com/1/andreumassanet/impasto",
             thumbs: ["https://opengraph.githubassets.com/1/andreumassanet/impasto", "https://opengraph.githubassets.com/1/andreumassanet/impasto", "https://opengraph.githubassets.com/1/andreumassanet/impasto"],
-            activateScript: "/home/warren/.config/quickshell/WorldOfShells/impasto-activate.sh",
-            revertScript: "/home/warren/.config/quickshell/WorldOfShells/impasto-revert.sh",
+            activateScript: Quickshell.shellPath("impasto-activate.sh"),
+            revertScript: Quickshell.shellPath("impasto-revert.sh"),
             activatable: true
         }
     ]
@@ -382,54 +432,70 @@ ShellRoot {
     property var tutorialSteps: [
         {
             icon: "\u2726",
-            badge: "ÉTAPE 1 SUR 7  •  INTRODUCTION",
-            title: "Bienvenue dans World of Shells",
-            desc: "Explorez et essayez facilement 14 environnements Quickshell pour Hyprland en un clic, sans compromettre votre configuration principale Ryoku.",
-            hint: "Utilisez les boutons Suivant / Précédent ou les flèches du clavier pour parcourir ce guide."
+            badge: "STEP 1 OF 7  •  INTRODUCTION",
+            title: "Welcome to World of Shells",
+            desc: "Browse 17 Quickshell environments for Hyprland and try one in a click, without touching your current configuration.",
+            hint: "Use the Next and Previous buttons or the arrow keys to move through this guide."
         },
         {
             icon: "\u2630",
-            badge: "ÉTAPE 2 SUR 7  •  NAVIGATION",
-            title: "Sélecteur de shells",
-            desc: "Le panneau latéral gauche liste tous les shells disponibles. Faites défiler pour parcourir la liste. Cliquez sur une carte pour inspecter ses détails.",
-            hint: "Chaque carte affiche le logo, l'auteur et le nombre d'étoiles GitHub du projet."
+            badge: "STEP 2 OF 7  •  NAVIGATION",
+            title: "Shell selector",
+            desc: "The left panel lists every available shell. Scroll through the list and click a card to see its details.",
+            hint: "Each card shows the project's logo, author and GitHub stars."
         },
         {
             icon: "\uD83D\uDD0D",
-            badge: "ÉTAPE 3 SUR 7  •  APERÇUS VISUELS",
-            title: "Galerie d'images",
-            desc: "Le panneau de droite présente une grande capture principale ainsi qu'une bande de miniatures. Cliquez sur n'importe quelle image pour l'ouvrir en plein écran (lightbox).",
-            hint: "Dans la lightbox : utilisez la molette pour zoomer, glissez pour vous déplacer et double-cliquez pour réinitialiser."
+            badge: "STEP 3 OF 7  •  PREVIEWS",
+            title: "Image gallery",
+            desc: "The right panel shows a large main screenshot and a strip of thumbnails. Click any image to open it full screen in the lightbox.",
+            hint: "In the lightbox, scroll to zoom, drag to move and double-click to reset."
         },
         {
             icon: "\u25B6",
-            badge: "ÉTAPE 4 SUR 7  •  TEST EN DIRECT",
-            title: "Activer un shell",
-            desc: "Cliquez sur le bouton « Activer » en bas à droite pour tester immédiatement le shell sélectionné. Ryoku est mis en pause proprement pendant que le nouveau shell se lance.",
-            hint: "Pour end-4 (dotfiles complets), une fenêtre de confirmation s'affiche avant toute installation."
+            badge: "STEP 4 OF 7  •  LIVE TEST",
+            title: "Activate a shell",
+            desc: "Click Activate at the bottom right to try the selected shell straight away. Your current shell is stopped cleanly while the new one starts.",
+            hint: "For end-4 (full dotfiles), a confirmation window appears before anything is installed."
         },
         {
             icon: "\u21BA",
-            badge: "ÉTAPE 5 SUR 7  •  RESTAURATION",
-            title: "Revenir à Ryoku",
-            desc: "À tout moment, cliquez sur le bouton « ↺ Revenir à Ryoku » situé en bas du panneau gauche pour arrêter le shell en cours d'essai et restaurer instantanément votre environnement Ryoku.",
-            hint: "L'indicateur d'état juste au-dessus du bouton vous confirme chaque opération."
+            badge: "STEP 5 OF 7  •  RESTORE",
+            title: "Return to your shell",
+            desc: "At any time, click ↺ Revert at the bottom of the left panel to stop the shell you are trying and restore your environment.",
+            hint: "The status line just above the button confirms each action."
         },
         {
             icon: "\u2699",
-            badge: "ÉTAPE 6 SUR 7  •  CONFIGURATION",
-            title: "Paramètres",
-            desc: "Le bouton « ⚙ Paramètres » situé dans l'en-tête du panneau gauche permet d'ouvrir le panneau des préférences de World of Shells (actuellement en aperçu).",
-            hint: "Vous pourrez également y relancer ce tutoriel à tout moment."
+            badge: "STEP 6 OF 7  •  SETTINGS",
+            title: "Settings",
+            desc: "The ⚙ Settings button in the left panel's header opens the World of Shells preferences (currently a preview).",
+            hint: "You can also replay this tutorial from there at any time."
         },
         {
             icon: "\u2713",
-            badge: "ÉTAPE 7 SUR 7  •  PRÊT",
-            title: "C'est parti !",
-            desc: "Vous connaissez maintenant toutes les fonctionnalités de World of Shells. Cliquez sur « Terminer » pour commencer à explorer et tester vos environnements Hyprland.",
-            hint: "Ce tutoriel ne s'affichera plus automatiquement lors de vos prochains lancements."
+            badge: "STEP 7 OF 7  •  READY",
+            title: "You're all set",
+            desc: "You now know everything World of Shells can do. Click Finish to start exploring and trying Hyprland environments.",
+            hint: "This tutorial won't open by itself next time."
         }
     ]
+
+    // Each shell's own installer. Shells missing here have no install script in their repo.
+    property var installers: ({
+        "MacShell": {branch: "main", file: "install.sh", run: "bash install.sh --no-autostart --no-services --no-start"},
+        "end-4 (illogical-impulse)": {branch: "main", file: "setup", run: "./setup install"},
+        "ghOSt": {branch: "main", file: "install.sh", run: "./install.sh --activate"},
+        "DankMaterialShell (DMS)": {branch: "master", file: "Makefile", run: "make build && sudo make install"},
+        "Nandoroid": {branch: "main", file: "install.sh", run: "bash install.sh"},
+        "SekaiPop": {branch: "main", file: "install.sh", run: "bash install.sh"},
+        "Vantage": {branch: "main", file: "install.sh", run: "bash install.sh"},
+        "Ukishima": {branch: "master", file: "remote-install.sh", run: "bash remote-install.sh"},
+        "Lucid": {branch: "main", file: "install.sh", run: "bash install.sh"},
+        "Nothingshell": {branch: "master", file: "install.sh", run: "bash install.sh"},
+        "NibrasShell": {branch: "quickshell", file: "install.py", run: "python3 install.py"},
+        "Impasto": {branch: "main", file: "setup", run: "bash setup"}
+    })
 
     FloatingWindow {
         id: win
@@ -446,11 +512,20 @@ ShellRoot {
         property int shellPage: 0
         property bool busy: false
         property bool confirmEnd4: false
+        property bool confirmInstall: false
+        property bool scriptOpen: false
+        property string scriptText: ""
+        property string scriptStatus: ""
+        readonly property var installer: installers[shell.name] || null
+        readonly property string repoLabel: shell.github.replace("https://", "")
+        readonly property string scriptUrl: installer
+            ? shell.github.replace("https://github.com/", "https://raw.githubusercontent.com/") + "/" + installer.branch + "/" + installer.file
+            : ""
         property bool settingsOpen: false
         property bool tutorialOpen: false
         property int tutorialStep: 0
         property int tutorialDirection: 1
-        property string statusText: "Prêt. Sélectionnez un shell à explorer ou activer."
+        property string statusText: "Ready. Select a shell to explore or activate."
         property var shell: shells[selectedShell]
 
         property bool lightboxOpen: false
@@ -471,7 +546,7 @@ ShellRoot {
             NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
         }
 
-        property string tutorialFlagPath: (Quickshell.env("HOME") || "/home/warren") + "/.config/WorldOfShells/tutorial_done"
+        property string tutorialFlagPath: Quickshell.env("HOME") + "/.config/WorldOfShells/tutorial_done"
 
         onSelectedShellChanged: {
             shellSwitchAnim.restart()
@@ -513,20 +588,17 @@ ShellRoot {
         }
         function closeLightbox() { lightboxOpen = false }
 
-        Timer {
-            id: actTimer
-            interval: 800
-            onTriggered: {
+        Process {
+            id: actProcess
+            property string target: ""
+            onExited: code => {
                 win.busy = false
-                if (win.selectedShell === 0) {
-                    win.statusText = "MacShell actif."
-                } else if (win.selectedShell === 2) {
-                    win.statusText = "DMS actif."
-                } else if (win.selectedShell === 3) {
-                    win.statusText = "Nucleus actif."
-                } else {
-                    win.statusText = win.shell.name + " actif."
-                }
+                if (code === 3)
+                    win.statusText = target + " is not installed. Nothing was changed."
+                else if (code === 0)
+                    win.statusText = target + " active."
+                else
+                    win.statusText = target + " did not start. Your shell was restored."
             }
         }
 
@@ -535,33 +607,72 @@ ShellRoot {
             interval: 800
             onTriggered: {
                 win.busy = false
-                win.statusText = "Retour à Ryoku effectué."
+                win.statusText = "Previous shell restored."
+            }
+        }
+
+        function viewScript() {
+            if (!installer) return
+            scriptText = ""
+            scriptStatus = "Fetching " + scriptUrl
+            scriptOpen = true
+            scriptFetch.running = false
+            scriptFetch.command = ["curl", "-fsSL", "--max-time", "20", scriptUrl]
+            scriptFetch.running = true
+        }
+        function startInstall() {
+            confirmInstall = false
+            scriptOpen = false
+            installProcess.target = shell.name
+            installProcess.command = ["bash", Quickshell.shellPath("install-shell.sh"), shell.github, installer.branch, installer.run]
+            installProcess.running = true
+            statusText = "Installing " + shell.name + " in a terminal..."
+        }
+        Process {
+            id: scriptFetch
+            stdout: StdioCollector {
+                onStreamFinished: win.scriptText = text
+            }
+            onExited: code => {
+                win.scriptStatus = code === 0 ? win.scriptUrl : "Could not fetch " + win.scriptUrl
+            }
+        }
+        Process {
+            id: installProcess
+            property string target: ""
+            onExited: code => {
+                if (code === 5)
+                    win.statusText = "No terminal found to run the installer."
+                else
+                    win.statusText = target + " installer closed."
             }
         }
 
         function activate() {
             if (win.busy) return
-            if (win.selectedShell === 1) { win.confirmEnd4 = true; return }
+            if (win.shell.name.startsWith("end-4")) { win.confirmEnd4 = true; return }
             win.busy = true
-            win.statusText = "Activation de " + win.shell.name + "..."
-            Quickshell.execDetached(["bash", win.shell.activateScript])
-            actTimer.restart()
+            win.statusText = "Activating " + win.shell.name + "..."
+            actProcess.target = win.shell.name
+            actProcess.command = ["bash", win.shell.activateScript]
+            actProcess.running = true
         }
         function confirmEnd4Activate() {
             win.confirmEnd4 = false
             win.busy = true
-            win.statusText = "Sauvegarde de Ryoku + lancement de l'installateur end-4..."
-            Quickshell.execDetached(["bash", win.shell.activateScript])
-            actTimer.restart()
+            win.statusText = "Backing up and starting the end-4 installer..."
+            actProcess.target = win.shell.name
+            actProcess.command = ["bash", win.shell.activateScript]
+            actProcess.running = true
         }
         function cancelEnd4Activate() {
             win.confirmEnd4 = false
-            win.statusText = "Annulé."
+            win.statusText = "Cancelled."
         }
         function revert() {
             if (win.busy || !win.shell.revertScript) return
             win.busy = true
-            win.statusText = "Restauration de Ryoku..."
+            win.statusText = "Restoring..."
             Quickshell.execDetached(["bash", win.shell.revertScript])
             revTimer.restart()
         }
@@ -654,7 +765,7 @@ ShellRoot {
                                     Behavior on rotation { NumberAnimation { duration: tok.animMed; easing.type: Easing.OutBack } }
                                 }
                                 Text {
-                                    text: "Paramètres"
+                                    text: "Settings"
                                     font.pixelSize: 10
                                     font.weight: Font.Medium
                                     color: tok.fgVariant
@@ -670,7 +781,7 @@ ShellRoot {
                         }
                     }
                     Text {
-                        text: "Sélecteur d'environnements Quickshell"
+                        text: "Quickshell environment selector"
                         font.pixelSize: 11
                         color: tok.fgMuted
                         elide: Text.ElideRight
@@ -732,7 +843,7 @@ ShellRoot {
                                         Layout.fillWidth: true
                                     }
                                     Text {
-                                        text: "par " + shells[cardRect.shellIndex].author
+                                        text: "by " + shells[cardRect.shellIndex].author
                                         font.pixelSize: 11
                                         color: tok.fgVariant
                                         elide: Text.ElideRight
@@ -779,7 +890,7 @@ ShellRoot {
                             opacity: canPrev ? 1.0 : 0.4
                             Text {
                                 anchors.centerIn: parent
-                                text: "\u25B2  Prec"
+                                text: "\u25B2  Prev"
                                 font.pixelSize: 10
                                 font.weight: Font.Medium
                                 color: prevPageMouse.containsMouse && parent.canPrev ? tok.fgOnPrimary : tok.fgVariant
@@ -802,7 +913,7 @@ ShellRoot {
                             opacity: canNext ? 1.0 : 0.4
                             Text {
                                 anchors.centerIn: parent
-                                text: "Suiv  \u25BC"
+                                text: "Next  \u25BC"
                                 font.pixelSize: 10
                                 font.weight: Font.Medium
                                 color: nextPageMouse.containsMouse && parent.canNext ? tok.fgOnPrimary : tok.fgVariant
@@ -873,7 +984,7 @@ ShellRoot {
                                     }
                                     Text {
                                         Layout.alignment: Qt.AlignHCenter
-                                        text: "Étoiles"
+                                        text: "Stars"
                                         font.pixelSize: 10
                                         color: tok.fgMuted
                                     }
@@ -925,7 +1036,7 @@ ShellRoot {
                                     }
                                     Text {
                                         Layout.alignment: Qt.AlignHCenter
-                                        text: "Licence"
+                                        text: "License"
                                         font.pixelSize: 10
                                         color: tok.fgMuted
                                     }
@@ -938,7 +1049,7 @@ ShellRoot {
                             Layout.fillWidth: true
                             spacing: tok.sp1
                             Text {
-                                text: "FONCTIONNALITÉS CLÉS"
+                                text: "KEY FEATURES"
                                 font.pixelSize: 10
                                 font.weight: Font.Bold
                                 color: tok.fgMuted
@@ -1014,7 +1125,7 @@ ShellRoot {
                         }
                     }
 
-                    // Revert to Ryoku Button
+                    // Revert Button
                     Rectangle {
                         id: revBtn
                         Layout.fillWidth: true
@@ -1032,7 +1143,7 @@ ShellRoot {
 
                         Text {
                             anchors.centerIn: parent
-                            text: win.busy ? "Opération en cours..." : "\u21BA  Revenir à Ryoku"
+                            text: win.busy ? "Working..." : "\u21BA  Revert"
                             font.pixelSize: 12
                             font.weight: Font.Medium
                             color: win.busy ? tok.fgMuted : tok.fg
@@ -1102,18 +1213,8 @@ ShellRoot {
                                 color: tok.tertiary
                             }
 
-                    // Disclaimer
-                    Text {
-                        text: "Projet experimental. L'activation d'un shell peut modifier votre configuration. Assurez-vous d'avoir des sauvegardes."
-                        font.pixelSize: 10
-                        color: tok.fgMuted
-                        wrapMode: Text.Wrap
-                        Layout.fillWidth: true
-                        font.italic: true
-                    }
-                }
                             Text {
-                                text: "Vidéo de démonstration"
+                                text: "Demo video"
                                 font.pixelSize: 11
                                 font.weight: Font.Medium
                                 color: tok.tertiary
@@ -1126,6 +1227,16 @@ ShellRoot {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: Qt.openUrlExternally(win.shell.video)
                         }
+                    }
+
+                    // Disclaimer
+                    Text {
+                        text: "Experimental. Activating a shell may change your configuration. Keep backups."
+                        font.pixelSize: 10
+                        color: tok.fgMuted
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                        font.italic: true
                     }
                 }
             }
@@ -1186,7 +1297,7 @@ ShellRoot {
                                 color: tok.fg
                             }
                             Text {
-                                text: "\u2022  Aperçu principal"
+                                text: "\u2022  Main preview"
                                 font.pixelSize: 11
                                 color: tok.fgMuted
                             }
@@ -1212,7 +1323,7 @@ ShellRoot {
                         Text {
                             id: zoomHintText
                             anchors.centerIn: parent
-                            text: "\uD83D\uDD0D Cliquer pour agrandir"
+                            text: "\uD83D\uDD0D Click to enlarge"
                             font.pixelSize: 11
                             font.weight: Font.Medium
                             color: featMouse.containsMouse ? tok.fgOnPrimary : tok.fgVariant
@@ -1317,6 +1428,8 @@ ShellRoot {
 
                             ColumnLayout {
                                 Layout.fillWidth: true
+                                // The long description must wrap, not widen the whole window layout.
+                                Layout.preferredWidth: 0
                                 spacing: 2
                                 Text {
                                     text: win.shell.name
@@ -1327,17 +1440,33 @@ ShellRoot {
                                     Layout.fillWidth: true
                                 }
                                 Text {
-                                    text: win.shell.bio
+                                    text: win.shell.bio + "  <a href=\"" + win.shell.github + "\">" + win.repoLabel + "</a>"
+                                    textFormat: Text.StyledText
+                                    linkColor: tok.primary
                                     font.pixelSize: 12
                                     color: tok.fgVariant
                                     wrapMode: Text.Wrap
                                     Layout.fillWidth: true
                                     lineHeight: 1.35
+                                    onLinkActivated: link => Qt.openUrlExternally(link)
+                                    HoverHandler {
+                                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    }
                                 }
                             }
 
+                            ActionButton {
+                                text: win.installer ? "View script" : "No script"
+                                enabled: win.installer !== null
+                                onClicked: win.viewScript()
+                            }
+                            ActionButton {
+                                text: "Install"
+                                enabled: win.installer !== null
+                                onClicked: win.confirmInstall = true
+                            }
                             Rectangle {
-                                Layout.preferredWidth: 230
+                                Layout.preferredWidth: 190
                                 Layout.preferredHeight: 44
                                 radius: tok.r3
                                 color: win.busy ? tok.surfaceHigh : (actMouse.containsMouse ? "#a6dcfa" : tok.primary)
@@ -1354,7 +1483,7 @@ ShellRoot {
                                     width: parent.width - tok.sp3 * 2
                                     horizontalAlignment: Text.AlignHCenter
                                     elide: Text.ElideRight
-                                    text: win.busy ? "Exécution..." : "Activer " + win.shell.name
+                                    text: win.busy ? "Running..." : "Activate " + win.shell.name
                                     font.pixelSize: 13
                                     font.weight: Font.Bold
                                     color: win.busy ? tok.fgVariant : tok.fgOnPrimary
@@ -1417,7 +1546,7 @@ ShellRoot {
                                     Text {
                                         id: prereqLabel
                                         anchors.centerIn: parent
-                                        text: "PRÉREQUIS"
+                                        text: "REQUIREMENTS"
                                         font.pixelSize: 10
                                         font.weight: Font.Bold
                                         color: tok.tertiary
@@ -1488,7 +1617,7 @@ ShellRoot {
                             color: tok.primary
                         }
                         Text {
-                            text: "\u2699  Paramètres"
+                            text: "\u2699  Settings"
                             font.pixelSize: 18
                             font.weight: Font.Bold
                             color: tok.fg
@@ -1511,7 +1640,7 @@ ShellRoot {
                             spacing: tok.sp2
 
                             Text {
-                                text: "Paramètres bientôt disponibles"
+                                text: "Settings coming soon"
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
                                 color: tok.primary
@@ -1519,7 +1648,7 @@ ShellRoot {
                                 Layout.fillWidth: true
                             }
                             Text {
-                                text: "Les options de personnalisation du cache d'aperçus, du comportement au lancement et des scripts seront ajoutées dans une prochaine mise à jour."
+                                text: "Options for the preview cache, startup behavior and scripts will come in a future update."
                                 font.pixelSize: 12
                                 color: tok.fgVariant
                                 wrapMode: Text.Wrap
@@ -1547,7 +1676,7 @@ ShellRoot {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Revoir le tutoriel"
+                                text: "Replay the tutorial"
                                 font.pixelSize: 12
                                 font.weight: Font.Medium
                                 color: tok.fgVariant
@@ -1576,7 +1705,7 @@ ShellRoot {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Fermer"
+                                text: "Close"
                                 font.pixelSize: 13
                                 font.weight: Font.Bold
                                 color: tok.fgOnPrimary
@@ -1587,6 +1716,188 @@ ShellRoot {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: win.settingsOpen = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ================= INSTALL CONFIRMATION =================
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.85)
+            opacity: win.confirmInstall ? 1.0 : 0.0
+            visible: opacity > 0.01
+            z: 1001
+            focus: win.confirmInstall
+            onVisibleChanged: if (win.confirmInstall) forceActiveFocus()
+            Keys.onEscapePressed: win.confirmInstall = false
+            Behavior on opacity { NumberAnimation { duration: tok.animMed; easing.type: Easing.OutCubic } }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: win.confirmInstall
+                onClicked: win.confirmInstall = false
+            }
+            Rectangle {
+                anchors.centerIn: parent
+                width: 480
+                height: installCol.implicitHeight + tok.sp5 * 2
+                radius: tok.r4
+                color: tok.surface
+                border.width: 1
+                border.color: tok.outlineVariant
+
+                MouseArea { anchors.fill: parent }
+
+                ColumnLayout {
+                    id: installCol
+                    anchors.fill: parent
+                    anchors.margins: tok.sp5
+                    spacing: tok.sp3
+
+                    Text {
+                        text: "Install " + win.shell.name + "?"
+                        font.pixelSize: 16
+                        font.weight: Font.Bold
+                        color: tok.fg
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        text: "Downloads " + win.repoLabel + " and runs its own installer in a terminal. It may install packages or change your Hyprland configuration."
+                        font.pixelSize: 12
+                        color: tok.fgVariant
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                        lineHeight: 1.35
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: runText.implicitHeight + tok.sp2 * 2
+                        radius: tok.r2
+                        color: tok.bg
+                        border.width: 1
+                        border.color: tok.outlineVariant
+                        Text {
+                            id: runText
+                            anchors.fill: parent
+                            anchors.margins: tok.sp2
+                            text: win.installer ? win.installer.run : ""
+                            font.family: "monospace"
+                            font.pixelSize: 11
+                            color: tok.fg
+                            wrapMode: Text.WrapAnywhere
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: tok.sp2
+                        Item { Layout.fillWidth: true }
+                        ActionButton {
+                            text: "Cancel"
+                            onClicked: win.confirmInstall = false
+                        }
+                        ActionButton {
+                            text: "View script"
+                            onClicked: { win.confirmInstall = false; win.viewScript() }
+                        }
+                        ActionButton {
+                            text: "Install"
+                            primary: true
+                            onClicked: win.startInstall()
+                        }
+                    }
+                }
+            }
+        }
+
+        // ================= INSTALL SCRIPT VIEWER =================
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.85)
+            opacity: win.scriptOpen ? 1.0 : 0.0
+            visible: opacity > 0.01
+            z: 1000
+            focus: win.scriptOpen
+            onVisibleChanged: if (win.scriptOpen) forceActiveFocus()
+            Keys.onEscapePressed: win.scriptOpen = false
+            Behavior on opacity { NumberAnimation { duration: tok.animMed; easing.type: Easing.OutCubic } }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: win.scriptOpen
+                onClicked: win.scriptOpen = false
+            }
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: tok.sp6
+                radius: tok.r4
+                color: tok.surface
+                border.width: 1
+                border.color: tok.outlineVariant
+
+                MouseArea { anchors.fill: parent }
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: tok.sp4
+                    spacing: tok.sp3
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: tok.sp2
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text {
+                                text: win.shell.name + " install script"
+                                font.pixelSize: 16
+                                font.weight: Font.Bold
+                                color: tok.fg
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                text: win.scriptStatus
+                                font.pixelSize: 11
+                                color: tok.fgMuted
+                                Layout.fillWidth: true
+                                elide: Text.ElideMiddle
+                            }
+                        }
+                        ActionButton {
+                            text: "Close"
+                            onClicked: win.scriptOpen = false
+                        }
+                        ActionButton {
+                            text: "Install"
+                            primary: true
+                            onClicked: { win.scriptOpen = false; win.confirmInstall = true }
+                        }
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: tok.r2
+                        color: tok.bg
+                        border.width: 1
+                        border.color: tok.outlineVariant
+                        clip: true
+                        ScrollView {
+                            anchors.fill: parent
+                            anchors.margins: tok.sp2
+                            TextArea {
+                                objectName: "script-text"
+                                readOnly: true
+                                selectByMouse: true
+                                text: win.scriptText
+                                textFormat: TextEdit.PlainText
+                                font.family: "monospace"
+                                font.pixelSize: 12
+                                color: tok.fg
+                                background: null
                             }
                         }
                     }
@@ -1640,7 +1951,7 @@ ShellRoot {
                             color: tok.primary
                         }
                         Text {
-                            text: "Installer end-4 (illogical-impulse) ?"
+                            text: "Install end-4 (illogical-impulse)?"
                             font.pixelSize: 18
                             font.weight: Font.Bold
                             color: tok.fg
@@ -1649,7 +1960,7 @@ ShellRoot {
                     }
 
                     Text {
-                        text: "end-4 (illogical-impulse) est un ensemble complet de dotfiles qui remplacera votre configuration Hyprland et Quickshell. Une sauvegarde complète de Ryoku sera créée automatiquement avant l'installation."
+                        text: "end-4 (illogical-impulse) is a complete set of dotfiles that will replace your Hyprland and Quickshell configuration. A backup of your current configuration is created automatically before installing."
                         font.pixelSize: 13
                         color: tok.fgVariant
                         wrapMode: Text.Wrap
@@ -1668,7 +1979,7 @@ ShellRoot {
                             id: termNote
                             anchors.fill: parent
                             anchors.margins: tok.sp3
-                            text: "L'installateur interactif s'ouvrira dans un terminal externe. Suivez les instructions affichées à l'écran."
+                            text: "The interactive installer opens in a separate terminal. Follow the instructions on screen."
                             font.pixelSize: 12
                             color: tok.fgMuted
                             wrapMode: Text.Wrap
@@ -1691,7 +2002,7 @@ ShellRoot {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Annuler"
+                                text: "Cancel"
                                 font.pixelSize: 13
                                 font.weight: Font.Medium
                                 color: tok.fg
@@ -1715,7 +2026,7 @@ ShellRoot {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Sauvegarder & Installer"
+                                text: "Back up & Install"
                                 font.pixelSize: 13
                                 font.weight: Font.Bold
                                 color: tok.fgOnPrimary
@@ -1859,13 +2170,13 @@ ShellRoot {
                     anchors.centerIn: parent
                     spacing: tok.sp3
                     Text {
-                        text: "Zoom : " + Math.round(win.lightboxZoom * 100) + "%"
+                        text: "Zoom: " + Math.round(win.lightboxZoom * 100) + "%"
                         font.pixelSize: 11
                         font.weight: Font.Bold
                         color: tok.primary
                     }
                     Text {
-                        text: "|   Molette : zoom   |   Glisser : déplacer   |   Double-clic : réinitialiser   |   Échap : fermer"
+                        text: "|   Scroll: zoom   |   Drag: move   |   Double-click: reset   |   Esc: close"
                         font.pixelSize: 11
                         color: tok.fgVariant
                     }
@@ -2013,7 +2324,7 @@ ShellRoot {
                             Text {
                                 id: skipBtnText
                                 anchors.centerIn: parent
-                                text: "Passer le tutoriel"
+                                text: "Skip the tutorial"
                                 font.pixelSize: 11
                                 font.weight: Font.Medium
                                 color: skipMouse.containsMouse ? tok.fg : tok.fgMuted
@@ -2154,7 +2465,7 @@ ShellRoot {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Précédent"
+                                text: "Previous"
                                 font.pixelSize: 13
                                 font.weight: Font.Medium
                                 color: tok.fg
@@ -2183,7 +2494,7 @@ ShellRoot {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: parent.isLastStep ? "Terminer" : "Suivant"
+                                text: parent.isLastStep ? "Finish" : "Next"
                                 font.pixelSize: 13
                                 font.weight: Font.Bold
                                 color: tok.fgOnPrimary
@@ -2207,3 +2518,4 @@ ShellRoot {
             }
         }
     }
+}

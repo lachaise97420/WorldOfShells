@@ -23,11 +23,11 @@ if [ ! -d "$END4_DIR" ]; then
 fi
 
 if command -v kitty >/dev/null 2>&1; then
-    kitty -e bash -c "cd $END4_DIR && ./setup install; echo 'Appuyez sur Entree pour fermer'; read" &
+    kitty -e bash -c "cd $END4_DIR && ./setup install; echo 'Press Enter to close'; read" &
 elif command -v alacritty >/dev/null 2>&1; then
-    alacritty -e bash -c "cd $END4_DIR && ./setup install; echo 'Appuyez sur Entree pour fermer'; read" &
+    alacritty -e bash -c "cd $END4_DIR && ./setup install; echo 'Press Enter to close'; read" &
 elif command -v gnome-terminal >/dev/null 2>&1; then
-    gnome-terminal -- bash -c "cd $END4_DIR && ./setup install; echo 'Appuyez sur Entree pour fermer'; read" &
+    gnome-terminal -- bash -c "cd $END4_DIR && ./setup install; echo 'Press Enter to close'; read" &
 else
     cd "$END4_DIR" && ./setup install
 fi
