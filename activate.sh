@@ -12,6 +12,9 @@ pkill -f 'qs -c lucid' 2>/dev/null || true
 pkill -f 'qs -c nothingshell' 2>/dev/null || true
 pkill -f 'qs -c nibras' 2>/dev/null || true
 pkill -f 'qs -c impasto' 2>/dev/null || true
+pkill -f 'qs -c cuteshell' 2>/dev/null || true
+pkill -f 'qs -c minflair' 2>/dev/null || true
+pkill -f 'qs -c trip' 2>/dev/null || true
 dms kill 2>/dev/null || true
 pkill -f 'dms run' 2>/dev/null || true
 pkill -f 'discord_voice_bridge.py' 2>/dev/null || true

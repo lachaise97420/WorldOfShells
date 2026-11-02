@@ -5,7 +5,7 @@ All notable changes to World of Shells will be documented in this file.
 ## [1.0.0] - 2026-11-02
 
 ### Added
-- **14 shells** supported: MacShell, end-4 (illogical-impulse), DankMaterialShell (DMS), Nucleus Shell, Nandoroid, SekaiPop, Twinshell, QSDots, Asaki Shell, MaterialUI, Vantage, Ukishima, Lucid, Nothingshell
+- **20 shells** supported: MacShell, end-4 (illogical-impulse), DankMaterialShell (DMS), Nucleus Shell, Nandoroid, SekaiPop, Twinshell, QSDots, Asaki Shell, MaterialUI, Vantage, Ukishima, Lucid, Nothingshell
 - **Shell selector** with pagination (4 shells per page, Prev/Next navigation)
 - **Activate/Revert** system: try any shell with one click, revert to your previous shell anytime
 - **Image gallery** with lightbox (zoom via mouse wheel, pan via drag, reset via double-click, close via Escape)
