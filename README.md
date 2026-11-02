@@ -9,6 +9,14 @@
 
 Some shells (like end-4) perform full dotfiles installations that may overwrite your existing configuration. Use at your own risk.
 
+
+
+## Screenshots
+
+![Screenshot 1](screenshot1.png)
+![Screenshot 2](screenshot2.png)
+![Screenshot 3](screenshot3.png)
+
 A showcase app for trying different Hyprland shells. Built with Quickshell.
 
 ## Installation
