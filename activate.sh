@@ -1,15 +1,23 @@
-#!/bin/bash
-. "$(dirname "$0")/common.sh"
-start=$HOME/.local/bin/macshell-start
-[ -d "$HOME/.config/quickshell/MacShell" ] && [ -x "$start" ] || exit 3
-stop_shells
-# The wrapper reads MacShell's environment file and restores its wallpaper choice.
-nohup sh "$start" </dev/null >"$logs/world-of-shells-MacShell.log" 2>&1 &
+pkill -f 'qs -c MacShell' 2>/dev/null || true
+pkill -f 'qs -c nucleus-shell' 2>/dev/null || true
+pkill -f 'qs -c nandoroid' 2>/dev/null || true
+pkill -f 'qs -c sekaipop' 2>/dev/null || true
+pkill -f 'qs -c twinshell' 2>/dev/null || true
+pkill -f 'qs -c qsdots' 2>/dev/null || true
+pkill -f 'qs -c asaki' 2>/dev/null || true
+pkill -f 'qs -c materialui' 2>/dev/null || true
+pkill -f 'qs -c vantage' 2>/dev/null || true
+pkill -f 'qs -c ukishima' 2>/dev/null || true
+pkill -f 'qs -c lucid' 2>/dev/null || true
+pkill -f 'qs -c nothingshell' 2>/dev/null || true
+pkill -f 'qs -c nibras' 2>/dev/null || true
+pkill -f 'qs -c impasto' 2>/dev/null || true
+dms kill 2>/dev/null || true
+pkill -f 'dms run' 2>/dev/null || true
+pkill -f 'discord_voice_bridge.py' 2>/dev/null || true
+systemctl --user stop ryoku-shell.service 2>/dev/null || true
+ps -eo pid,args | awk '/qs -c shell/ && !/awk/ {print $1}' | xargs -r kill 2>/dev/null || true
+sleep 0.5
+nohup qs -c MacShell </dev/null >/tmp/opencode/MacShell.log 2>&1 &
 disown
-sleep 2
-if ! qs list -c MacShell 2>&1 | grep -q '^Instance'; then
-    pkill -f '/macshell-start' 2>/dev/null || true
-    restore_shell
-    exit 4
-fi
 echo "activated"

@@ -36,7 +36,64 @@ ShellRoot {
         }
     }
 
-    Component.onCompleted: Quickshell.watchFiles = false
+    Component.onCompleted: {
+        Quickshell.watchFiles = false
+        // Load last selected shell
+        var proc = Qt.createQmlObject('import Quickshell.Io; Process {}', win)
+        proc.command = ["bash", "-c", "cat ~/.config/WorldOfShells/last_shell 2>/dev/null || echo 0"]
+    }
+
+    FileView {
+        id: lastShellFile
+        path: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/WorldOfShells/last_shell"
+        blockLoading: true
+        printErrors: false
+        onLoaded: {
+            try {
+                var idx = parseInt(lastShellFile.text().trim())
+                if (idx >= 0 && idx < shells.length) win.selectedShell = idx
+            } catch (e) {}
+        }
+        Component.onCompleted: {
+            try { reload() } catch (e) {}
+        }
+    }
+
+    FileView {
+        id: windowSizeFile
+        path: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/WorldOfShells/window_size"
+        blockLoading: true
+        printErrors: false
+        onLoaded: {
+            try {
+                var parts = windowSizeFile.text().trim().split("x")
+                if (parts.length === 4) {
+                    var w = parseInt(parts[0])
+                    var h = parseInt(parts[1])
+                    var px = parseInt(parts[2])
+                    var py = parseInt(parts[3])
+                    if (w >= 700 && h >= 500) {
+                        win.width = w
+                        win.height = h
+                        if (px >= 0 && py >= 0) {
+                            win.x = px
+                            win.y = py
+                        }
+                    }
+                } else if (parts.length === 2) {
+                    var w = parseInt(parts[0])
+                    var h = parseInt(parts[1])
+                    if (w >= 700 && h >= 500) {
+                        win.width = w
+                        win.height = h
+                    }
+                }
+            } catch (e) {}
+        }
+        Component.onCompleted: {
+            try { reload() } catch (e) {}
+        }
+    }
 
     QtObject {
         id: tok
@@ -67,6 +124,20 @@ ShellRoot {
 
         property string colorsPath: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/ryoku/colors.json"
 
+        function applyTheme(dark) {
+            if (dark) {
+                bg = "#0f1417"; surface = "#171c1f"; surfaceHigh = "#262b2e"
+                fg = "#dfe3e7"; fgVariant = "#c0c7cd"; fgMuted = "#8a9297"
+                fgOnPrimary = "#003549"; primary = "#8ecff2"; tertiary = "#c9c1ea"
+                outline = "#8a9297"; outlineVariant = "#40484d"
+            } else {
+                bg = "#f5f5f5"; surface = "#ffffff"; surfaceHigh = "#e8e8e8"
+                fg = "#1a1a1a"; fgVariant = "#4a4a4a"; fgMuted = "#8a8a8a"
+                fgOnPrimary = "#ffffff"; primary = "#0066cc"; tertiary = "#6633cc"
+                outline = "#8a8a8a"; outlineVariant = "#cccccc"
+            }
+        }
+
         function applyColors(c) {
             if (!c || typeof c !== "object") return
             function usable(v) { return typeof v === "string" && v.length > 0 }
@@ -84,6 +155,14 @@ ShellRoot {
         }
     }
 
+    // Apply theme when darkTheme changes
+    Connections {
+        target: win
+        function onDarkThemeChanged() {
+            tok.applyTheme(win.darkTheme)
+        }
+    }
+
     FileView {
         id: colorsFile
         path: tok.colorsPath
@@ -97,6 +176,7 @@ ShellRoot {
                 const c = t && t.length ? JSON.parse(t) : null
                 if (c) tok.applyColors(c)
             } catch (e) {}
+            tok.applyTheme(win.darkTheme)
         }
         Component.onCompleted: {
             try { reload() } catch (e) {}
@@ -503,15 +583,26 @@ ShellRoot {
         minimumSize: Qt.size(700, 500)
         implicitWidth: 1120
         implicitHeight: 740
-        onClosed: Qt.quit()
+        onClosed: {
+            var proc = Qt.createQmlObject('import Quickshell.Io; Process {}', win)
+            proc.command = ["bash", "-c", "mkdir -p ~/.config/WorldOfShells && echo " + width + "x" + height + "x" + x + "x" + y + " > ~/.config/WorldOfShells/window_size"]
+            proc.running = true
+            Qt.quit()
+        }
+
 
         color: tok.bg
         Behavior on color { ColorAnimation { duration: tok.animMed } }
 
         property int selectedShell: 0
         property int shellPage: 0
+        property int activeShellIndex: -1
         property bool busy: false
         property bool confirmEnd4: false
+        property bool darkTheme: true
+        property int autoRevertMinutes: 0
+        property bool rememberLastShell: false
+        property string lastSelectedShell: "0"
         property bool confirmInstall: false
         property bool scriptOpen: false
         property string scriptText: ""
@@ -528,11 +619,14 @@ ShellRoot {
         property string statusText: "Ready. Select a shell to explore or activate."
         property var shell: shells[selectedShell]
 
+        // Save last selected shell
         property bool lightboxOpen: false
         property string lightboxSource: ""
         property real lightboxZoom: 1.0
         property real lightboxPanX: 0
         property real lightboxPanY: 0
+        property int lightboxIndex: 0
+        property var lightboxImages: []
 
         Behavior on lightboxZoom {
             NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
@@ -550,6 +644,11 @@ ShellRoot {
 
         onSelectedShellChanged: {
             shellSwitchAnim.restart()
+            if (rememberLastShell) {
+                var proc = Qt.createQmlObject('import Quickshell.Io; Process {}', win)
+                proc.command = ["bash", "-c", "mkdir -p ~/.config/WorldOfShells && echo " + selectedShell + " > ~/.config/WorldOfShells/last_shell"]
+                proc.running = true
+            }
         }
 
         function goToTutorialStep(newStep) {
@@ -580,11 +679,35 @@ ShellRoot {
         }
 
         function openLightbox(src) {
-            lightboxSource = src
+            lightboxImages = [shell.featured].concat(shell.thumbs)
+            var idx = 0
+            for (var i = 0; i < lightboxImages.length; i++) {
+                if (lightboxImages[i] === src) { idx = i; break }
+            }
+            lightboxIndex = idx
+            lightboxSource = lightboxImages[idx]
             lightboxZoom = 1.0
             lightboxPanX = 0
             lightboxPanY = 0
             lightboxOpen = true
+        }
+        function lightboxPrev() {
+            if (lightboxIndex > 0) {
+                lightboxIndex--
+                lightboxSource = lightboxImages[lightboxIndex]
+                lightboxZoom = 1.0
+                lightboxPanX = 0
+                lightboxPanY = 0
+            }
+        }
+        function lightboxNext() {
+            if (lightboxIndex < lightboxImages.length - 1) {
+                lightboxIndex++
+                lightboxSource = lightboxImages[lightboxIndex]
+                lightboxZoom = 1.0
+                lightboxPanX = 0
+                lightboxPanY = 0
+            }
         }
         function closeLightbox() { lightboxOpen = false }
 
@@ -608,6 +731,16 @@ ShellRoot {
             onTriggered: {
                 win.busy = false
                 win.statusText = "Previous shell restored."
+            }
+        }
+
+        Timer {
+            id: autoRevertTimer
+            interval: win.autoRevertMinutes * 60000
+            running: win.busy && win.autoRevertMinutes > 0
+            repeat: false
+            onTriggered: {
+                win.revert()
             }
         }
 
@@ -656,6 +789,8 @@ ShellRoot {
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
+            autoRevertTimer.restart()
+            win.activeShellIndex = win.selectedShell
         }
         function confirmEnd4Activate() {
             win.confirmEnd4 = false
@@ -664,6 +799,8 @@ ShellRoot {
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
+            autoRevertTimer.restart()
+            win.activeShellIndex = win.selectedShell
         }
         function cancelEnd4Activate() {
             win.confirmEnd4 = false
@@ -675,6 +812,8 @@ ShellRoot {
             win.statusText = "Restoring..."
             Quickshell.execDetached(["bash", win.shell.revertScript])
             revTimer.restart()
+            autoRevertTimer.stop()
+            win.activeShellIndex = -1
         }
 
         // Transition animation when switching selectedShell
@@ -703,6 +842,35 @@ ShellRoot {
                 to: 1.0
                 duration: 180
                 easing.type: Easing.OutCubic
+            }
+        }
+
+        // Hidden focus item for keyboard shortcuts
+        Item {
+            id: keyHandler
+            anchors.fill: parent
+            focus: true
+            Keys.onPressed: (event) => {
+                if (win.lightboxOpen) {
+                    if (event.key === Qt.Key_Left) { win.lightboxPrev(); event.accepted = true }
+                    else if (event.key === Qt.Key_Right) { win.lightboxNext(); event.accepted = true }
+                    else if (event.key === Qt.Key_Escape) { win.closeLightbox(); event.accepted = true }
+                } else {
+                    if (event.key === Qt.Key_Up) {
+                        if (win.selectedShell > 0) win.selectedShell--
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Down) {
+                        if (win.selectedShell < shells.length - 1) win.selectedShell++
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        win.activate()
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        if (win.settingsOpen) win.settingsOpen = false
+                        else win.revert()
+                        event.accepted = true
+                    }
+                }
             }
         }
 
@@ -863,6 +1031,23 @@ ShellRoot {
                                         font.pixelSize: 10
                                         font.weight: Font.Bold
                                         color: cardRect.isSelected ? tok.fgOnPrimary : tok.fgVariant
+                                    }
+                                }
+
+                                // Active shell badge
+                                Rectangle {
+                                    Layout.preferredWidth: activeBadgeText.implicitWidth + tok.sp2 * 2
+                                    Layout.preferredHeight: 22
+                                    radius: 11
+                                    color: "#22c55e"
+                                    visible: win.activeShellIndex === cardRect.shellIndex
+                                    Text {
+                                        id: activeBadgeText
+                                        anchors.centerIn: parent
+                                        text: "ACTIVE"
+                                        font.pixelSize: 9
+                                        font.weight: Font.Bold
+                                        color: "#ffffff"
                                     }
                                 }
                             }
@@ -1637,23 +1822,275 @@ ShellRoot {
                             id: settingsMsgCol
                             anchors.fill: parent
                             anchors.margins: tok.sp4
-                            spacing: tok.sp2
+                            spacing: tok.sp3
 
-                            Text {
-                                text: "Settings coming soon"
-                                font.pixelSize: 14
-                                font.weight: Font.Bold
-                                color: tok.primary
-                                wrapMode: Text.Wrap
+                            ColumnLayout {
                                 Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Theme"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: tok.sp2
+                                    Repeater {
+                                        model: ["Dark", "Light"]
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 32
+                                            radius: tok.r2
+                                            color: (modelData === "Dark" && win.darkTheme) || (modelData === "Light" && !win.darkTheme) ? tok.primary : tok.surfaceHigh
+                                            border.width: 1
+                                            border.color: (modelData === "Dark" && win.darkTheme) || (modelData === "Light" && !win.darkTheme) ? tok.primary : tok.outlineVariant
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData
+                                                font.pixelSize: 11
+                                                font.weight: Font.Medium
+                                                color: (modelData === "Dark" && win.darkTheme) || (modelData === "Light" && !win.darkTheme) ? tok.fgOnPrimary : tok.fgVariant
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    win.darkTheme = (modelData === "Dark")
+                                                    tok.applyTheme(win.darkTheme)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                            Text {
-                                text: "Options for the preview cache, startup behavior and scripts will come in a future update."
-                                font.pixelSize: 12
-                                color: tok.fgVariant
-                                wrapMode: Text.Wrap
+
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                lineHeight: 1.35
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Remember last shell"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Restore the last selected shell on startup."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 32
+                                    radius: tok.r2
+                                    color: win.rememberLastShell ? tok.primary : tok.surfaceHigh
+                                    border.width: 1
+                                    border.color: win.rememberLastShell ? tok.primary : tok.outlineVariant
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: win.rememberLastShell ? "On" : "Off"
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        color: win.rememberLastShell ? tok.fgOnPrimary : tok.fgVariant
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: win.rememberLastShell = !win.rememberLastShell
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Auto-revert timer"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Automatically revert to your shell after activating."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: tok.sp2
+                                    Repeater {
+                                        model: [0, 5, 10, 30]
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 32
+                                            radius: tok.r2
+                                            color: win.autoRevertMinutes === modelData ? tok.primary : tok.surfaceHigh
+                                            border.width: 1
+                                            border.color: win.autoRevertMinutes === modelData ? tok.primary : tok.outlineVariant
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData === 0 ? "Off" : modelData + " min"
+                                                font.pixelSize: 11
+                                                font.weight: Font.Medium
+                                                color: win.autoRevertMinutes === modelData ? tok.fgOnPrimary : tok.fgVariant
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: win.autoRevertMinutes = modelData
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check for updates
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Check for updates"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Check if a newer version is available on GitHub."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 32
+                                    radius: tok.r2
+                                    color: checkUpdateMouse.containsMouse ? tok.surfaceHigh : tok.bg
+                                    border.width: 1
+                                    border.color: checkUpdateMouse.containsMouse ? tok.primary : tok.outlineVariant
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: win.busy ? "Checking..." : "Check updates"
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        color: tok.fg
+                                    }
+                                    MouseArea {
+                                        id: checkUpdateMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            var repo = win.shell.github.replace("https://github.com/", "")
+                                            var proc = Qt.createQmlObject('import Quickshell.Io; Process { stdout: StdioCollector { onStreamFinished: { win.statusText = text.trim() } } }', win)
+                                            proc.command = ["bash", "-c", "curl -s https://api.github.com/repos/" + repo + " 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print('Stars:', d.get('stargazers_count','?')); print('Last push:', str(d.get('pushed_at','?'))[:10])\""]
+                                            proc.onExited = function(code) {
+                                                win.busy = false
+                                                if (code !== 0) win.statusText = "Update check failed."
+                                            }
+                                            win.busy = true
+                                            win.statusText = "Checking updates for " + win.shell.name + "..."
+                                            proc.running = true
+                                        }
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Image cache"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Download all preview images for offline use."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 32
+                                    radius: tok.r2
+                                    color: dlMouse.containsMouse ? tok.surfaceHigh : tok.bg
+                                    border.width: 1
+                                    border.color: dlMouse.containsMouse ? tok.primary : tok.outlineVariant
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Download images"
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        color: tok.fg
+                                    }
+                                    MouseArea {
+                                        id: dlMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            var proc = Qt.createQmlObject('import Quickshell.Io; Process {}', win)
+                                            proc.command = ["bash", "/home/warren/.config/quickshell/WorldOfShells/download-images.sh"]
+                                            proc.running = true
+                                            win.statusText = "Downloading images..."
+                                        }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: aboutCol.implicitHeight + tok.sp3 * 2
+                                radius: tok.r3
+                                color: tok.bg
+                                border.width: 1
+                                border.color: tok.outlineVariant
+                                ColumnLayout {
+                                    id: aboutCol
+                                    anchors.fill: parent
+                                    anchors.margins: tok.sp3
+                                    spacing: tok.sp1
+                                    Text {
+                                        text: "About"
+                                        font.pixelSize: 13
+                                        font.weight: Font.Medium
+                                        color: tok.fg
+                                    }
+                                    Text {
+                                        text: "World of Shells v1.0"
+                                        font.pixelSize: 11
+                                        color: tok.fgVariant
+                                    }
+                                    Text {
+                                        text: "A showcase app for trying Hyprland shells."
+                                        font.pixelSize: 11
+                                        color: tok.fgMuted
+                                        wrapMode: Text.Wrap
+                                        Layout.fillWidth: true
+                                    }
+                                    Text {
+                                        text: "By lachaise97420 - MIT License"
+                                        font.pixelSize: 10
+                                        color: tok.fgMuted
+                                    }
+                                    Text {
+                                        text: "github.com/lachaise97420/WorldOfShells"
+                                        font.pixelSize: 10
+                                        color: tok.primary
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: Qt.openUrlExternally("https://github.com/lachaise97420/WorldOfShells")
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -2055,6 +2492,8 @@ ShellRoot {
             focus: win.lightboxOpen
             onVisibleChanged: if (win.lightboxOpen) forceActiveFocus()
             Keys.onEscapePressed: win.closeLightbox()
+            Keys.onLeftPressed: win.lightboxPrev()
+            Keys.onRightPressed: win.lightboxNext()
             Behavior on opacity { NumberAnimation { duration: tok.animMed; easing.type: Easing.OutCubic } }
 
             MouseArea {
@@ -2121,6 +2560,62 @@ ShellRoot {
                 }
             }
 
+            // Prev button (left)
+            Rectangle {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: tok.sp4
+                width: 44
+                height: 44
+                radius: 22
+                color: prevLbMouse.containsMouse ? tok.primary : Qt.rgba(0, 0, 0, 0.6)
+                border.width: 1
+                border.color: tok.outlineVariant
+                visible: win.lightboxIndex > 0
+                Text {
+                    anchors.centerIn: parent
+                    text: "\u25C0"
+                    font.pixelSize: 18
+                    font.weight: Font.Bold
+                    color: prevLbMouse.containsMouse ? tok.fgOnPrimary : tok.fg
+                }
+                MouseArea {
+                    id: prevLbMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: win.lightboxPrev()
+                }
+            }
+
+            // Next button (right)
+            Rectangle {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: tok.sp4
+                width: 44
+                height: 44
+                radius: 22
+                color: nextLbMouse.containsMouse ? tok.primary : Qt.rgba(0, 0, 0, 0.6)
+                border.width: 1
+                border.color: tok.outlineVariant
+                visible: win.lightboxIndex < win.lightboxImages.length - 1
+                Text {
+                    anchors.centerIn: parent
+                    text: "\u25B6"
+                    font.pixelSize: 18
+                    font.weight: Font.Bold
+                    color: nextLbMouse.containsMouse ? tok.fgOnPrimary : tok.fg
+                }
+                MouseArea {
+                    id: nextLbMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: win.lightboxNext()
+                }
+            }
+
             // Close button (top-right)
             Rectangle {
                 anchors.top: parent.top
@@ -2170,10 +2665,20 @@ ShellRoot {
                     anchors.centerIn: parent
                     spacing: tok.sp3
                     Text {
-                        text: "Zoom: " + Math.round(win.lightboxZoom * 100) + "%"
+                        text: "Image " + (win.lightboxIndex + 1) + " / " + win.lightboxImages.length
                         font.pixelSize: 11
                         font.weight: Font.Bold
                         color: tok.primary
+                    }
+                    Text {
+                        text: "|"
+                        font.pixelSize: 11
+                        color: tok.fgMuted
+                    }
+                    Text {
+                        text: "Zoom: " + Math.round(win.lightboxZoom * 100) + "%"
+                        font.pixelSize: 11
+                        color: tok.fgVariant
                     }
                     Text {
                         text: "|   Scroll: zoom   |   Drag: move   |   Double-click: reset   |   Esc: close"
@@ -2408,7 +2913,7 @@ ShellRoot {
                         opacity: 0.5
                     }
 
-                    // Bottom bar: Animated Progress dots + Précédent / Suivant / Terminer buttons
+                    // Bottom bar: Animated Progress dots + Previous / Next / Finish buttons
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: tok.sp3
@@ -2446,7 +2951,7 @@ ShellRoot {
 
                         Item { Layout.fillWidth: true }
 
-                        // Précédent button
+                        // Previous button
                         Rectangle {
                             property bool canPrev: win.tutorialStep > 0
                             Layout.preferredWidth: 110

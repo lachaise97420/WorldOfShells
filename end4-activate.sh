@@ -15,6 +15,7 @@ pkill -f 'qs -c impasto' 2>/dev/null || true
 dms kill 2>/dev/null || true
 pkill -f 'dms run' 2>/dev/null || true
 pkill -f 'discord_voice_bridge.py' 2>/dev/null || true
+systemctl --user stop ryoku-shell.service 2>/dev/null || true
 ps -eo pid,args | awk '/qs -c shell/ && !/awk/ {print $1}' | xargs -r kill 2>/dev/null || true
 sleep 0.5
 END4_DIR="$HOME/.local/share/end4-dots"
@@ -23,11 +24,11 @@ if [ ! -d "$END4_DIR" ]; then
 fi
 
 if command -v kitty >/dev/null 2>&1; then
-    kitty -e bash -c "cd $END4_DIR && ./setup install; echo 'Press Enter to close'; read" &
+    kitty -e bash -c "cd $END4_DIR && ./setup install; echo 'Appuyez sur Entree pour fermer'; read" &
 elif command -v alacritty >/dev/null 2>&1; then
-    alacritty -e bash -c "cd $END4_DIR && ./setup install; echo 'Press Enter to close'; read" &
+    alacritty -e bash -c "cd $END4_DIR && ./setup install; echo 'Appuyez sur Entree pour fermer'; read" &
 elif command -v gnome-terminal >/dev/null 2>&1; then
-    gnome-terminal -- bash -c "cd $END4_DIR && ./setup install; echo 'Press Enter to close'; read" &
+    gnome-terminal -- bash -c "cd $END4_DIR && ./setup install; echo 'Appuyez sur Entree pour fermer'; read" &
 else
     cd "$END4_DIR" && ./setup install
 fi
