@@ -78,6 +78,12 @@ Install clones the shell's repo and runs its own installer in a terminal. View s
 
 Want to add a shell? See [CONTRIBUTING.md](CONTRIBUTING.md) for a step-by-step guide.
 
+
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full list of changes.
+
 ## License
 MIT
 
