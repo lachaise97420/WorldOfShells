@@ -64,6 +64,12 @@ Or find "World of Shells" in your app launcher.
 - Qt 6.5+
 - qsb (qt6-shadertools)
 
+
+
+## Contributing
+
+Want to add a shell? See [CONTRIBUTING.md](CONTRIBUTING.md) for a step-by-step guide.
+
 ## License
 MIT
 
