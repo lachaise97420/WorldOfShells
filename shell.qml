@@ -655,7 +655,7 @@ ShellRoot {
         property int shellPage: 0
         property int activeShellIndex: -1
         property bool transitionActive: false
-        property int transitionStyle: 0  // 0 = Sobre, 1 = Gemini
+        property int transitionStyle: 0  // 0 = Sobre, 1 = Dynamic, 2 = None
         property bool busy: false
         property bool confirmEnd4: false
         property bool darkTheme: true
@@ -851,8 +851,10 @@ ShellRoot {
             if (win.shell.name.startsWith("end-4")) { win.confirmEnd4 = true; return }
             win.busy = true
             win.statusText = "Activating " + win.shell.name + "..."
-            win.transitionActive = true
-            transitionTimer.restart()
+            if (win.transitionStyle !== 2) {
+                win.transitionActive = true
+                transitionTimer.restart()
+            }
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
@@ -860,8 +862,9 @@ ShellRoot {
             win.activeShellIndex = win.selectedShell
         }
         function previewTransition(style) {
+            if (style === 2) return
             win.transitionStyle = style
-            win.statusText = "Preview: " + (style === 0 ? "Sobre" : "Gemini")
+            win.statusText = "Preview: " + (style === 0 ? "Sobre" : "Dynamic")
             win.transitionActive = true
             transitionTimer.restart()
         }
@@ -869,8 +872,10 @@ ShellRoot {
             win.confirmEnd4 = false
             win.busy = true
             win.statusText = "Backing up and starting the end-4 installer..."
-            win.transitionActive = true
-            transitionTimer.restart()
+            if (win.transitionStyle !== 2) {
+                win.transitionActive = true
+                transitionTimer.restart()
+            }
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
@@ -2973,25 +2978,25 @@ ShellRoot {
                                     Layout.fillWidth: true
                                     spacing: tok.sp2
                                     Repeater {
-                                        model: ["Sobre", "Gemini"]
+                                        model: ["Sobre", "Dynamic", "None"]
                                         Rectangle {
                                             Layout.fillWidth: true
                                             height: 32
                                             radius: tok.r2
-                                            color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Gemini" && win.transitionStyle === 1) ? tok.primary : tok.surfaceHigh
+                                            color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Dynamic" && win.transitionStyle === 1) || (modelData === "None" && win.transitionStyle === 2) ? tok.primary : tok.surfaceHigh
                                             border.width: 1
-                                            border.color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Gemini" && win.transitionStyle === 1) ? tok.primary : tok.outlineVariant
+                                            border.color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Dynamic" && win.transitionStyle === 1) || (modelData === "None" && win.transitionStyle === 2) ? tok.primary : tok.outlineVariant
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: modelData
                                                 font.pixelSize: 11
                                                 font.weight: Font.Medium
-                                                color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Gemini" && win.transitionStyle === 1) ? tok.fgOnPrimary : tok.fgVariant
+                                                color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Dynamic" && win.transitionStyle === 1) || (modelData === "None" && win.transitionStyle === 2) ? tok.fgOnPrimary : tok.fgVariant
                                             }
                                             MouseArea {
                                                 anchors.fill: parent
                                                 cursorShape: Qt.PointingHandCursor
-                                                onClicked: win.transitionStyle = (modelData === "Sobre" ? 0 : 1)
+                                                onClicked: win.transitionStyle = (modelData === "Sobre" ? 0 : (modelData === "Dynamic" ? 1 : 2))
                                             }
                                         }
                                     }
@@ -3001,7 +3006,7 @@ ShellRoot {
                                     Layout.fillWidth: true
                                     spacing: tok.sp2
                                     Repeater {
-                                        model: ["Sobre", "Gemini"]
+                                        model: ["Sobre", "Dynamic"]
                                         Rectangle {
                                             Layout.fillWidth: true
                                             height: 28

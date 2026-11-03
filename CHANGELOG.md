@@ -5,6 +5,9 @@ All notable changes to World of Shells will be documented in this file.
 ## [1.3.0] - 2026-11-03
 
 ### Added
+- Transition style selector in Settings: choose between Sobre (minimalist), Dynamic (rich effects), or None (disabled)
+- Preview buttons for Sobre and Dynamic styles
+- No transition animation option for users who prefer instant switching
 - **Transition style selector** in Settings: choose between "Sobre" (minimalist monochrome) and "Gemini" (rich Matugen effects)
 - **Preview buttons** in Settings to preview each transition style without activating a shell
 - Both transition overlays coexist; only the selected one is shown
