@@ -40,7 +40,7 @@ qs -c WorldOfShells
 
 Or find "World of Shells" in your app launcher.
 
-## Shells included (17)
+## Shells included (21)
 
 | Shell | Stars | License | Activation |
 |-------|-------|---------|------------|
@@ -61,6 +61,9 @@ Or find "World of Shells" in your app launcher.
 | Nothingshell | 26 | MIT | Start qs -c nothingshell |
 | NibrasShell |  |  | Start qs -c nibras |
 | Impasto |  |  | Start qs -c impasto |
+| CuteShell | 17 | GPL-3.0 | Start qs -c cuteshell |
+| Minflair | 212 | GPL-3.0 | Start qs -c minflair |
+| Tripathi Quickshell | 196 | MIT | Start qs -c trip |
 | Serpantinum | 7.6k | AGPL-3.0 | serpantinumd start |
 
 ## Installing a shell
@@ -68,7 +71,7 @@ Or find "World of Shells" in your app launcher.
 Install clones the shell's repo and runs its own installer in a terminal. View script fetches that installer from the repo first. Shells with no script in their repo have neither.
 
 ## Features
-- Browse 17 shells with screenshots
+- Browse 21 shells with screenshots
 - Click "Activate" to try an installed shell (stops current, starts new one)
 - Click "Revert" to stop it and restore ghOSt
 - Image lightbox with zoom/pan
