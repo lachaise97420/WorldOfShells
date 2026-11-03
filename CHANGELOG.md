@@ -2,6 +2,21 @@
 
 All notable changes to World of Shells will be documented in this file.
 
+## [1.3.0] - 2026-11-03
+
+### Added
+- **Transition style selector** in Settings: choose between "Sobre" (minimalist monochrome) and "Gemini" (rich Matugen effects)
+- **Preview buttons** in Settings to preview each transition style without activating a shell
+- Both transition overlays coexist; only the selected one is shown
+-  property (0 = Sobre, 1 = Gemini) controls which overlay is active
+
+## [1.3.0] - 2026-11-03
+
+### Added
+- Transition style selector in Settings: choose between Sobre (minimalist monochrome) and Gemini (rich Matugen effects)
+- Preview buttons in Settings to preview each transition style without activating a shell
+- Both transition overlays coexist; only the selected one is shown
+
 ## [1.2.0] - 2026-11-03
 
 ### Changed

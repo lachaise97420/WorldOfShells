@@ -655,6 +655,7 @@ ShellRoot {
         property int shellPage: 0
         property int activeShellIndex: -1
         property bool transitionActive: false
+        property int transitionStyle: 0  // 0 = Sobre, 1 = Gemini
         property bool busy: false
         property bool confirmEnd4: false
         property bool darkTheme: true
@@ -858,6 +859,12 @@ ShellRoot {
             autoRevertTimer.restart()
             win.activeShellIndex = win.selectedShell
         }
+        function previewTransition(style) {
+            win.transitionStyle = style
+            win.statusText = "Preview: " + (style === 0 ? "Sobre" : "Gemini")
+            win.transitionActive = true
+            transitionTimer.restart()
+        }
         function confirmEnd4Activate() {
             win.confirmEnd4 = false
             win.busy = true
@@ -942,12 +949,408 @@ ShellRoot {
             }
         }
 
-// ===== FULLSCREEN TRANSITION OVERLAY =====
+// ===== FULLSCREEN TRANSITION OVERLAY (SOBRE & PREMIUM) =====
         Rectangle {
-            id: transitionOverlay
+            id: transitionOverlaySobre
             anchors.fill: parent
             color: "#09090b"
-            opacity: win.transitionActive ? 1.0 : 0.0
+            opacity: (win.transitionActive && win.transitionStyle === 0) ? 1.0 : 0.0
+            visible: opacity > 0.01
+            z: 10000
+
+            // Normalized 0..1 progress for the 3.2s linear orbit sweep (wosOrbitSweep)
+            property real orbitPhase: 0.0
+
+            // 5 ultra-discreet monochrome dust motes (x, y offsets, size, duration, maxOpacity)
+            readonly property var ambientMotes: [
+                { dx: -195, dy: -54, sz: 2.0, dur: 3400, maxOp: 0.22 },
+                { dx:  185, dy: -62, sz: 1.8, dur: 3800, maxOp: 0.18 },
+                { dx: -140, dy:  68, sz: 1.6, dur: 3200, maxOp: 0.15 },
+                { dx:  155, dy:  64, sz: 2.0, dur: 3600, maxOp: 0.20 },
+                { dx:   12, dy: -88, sz: 1.5, dur: 4000, maxOp: 0.14 }
+            ]
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: win.transitionActive ? 320 : 420
+                    easing.type: Easing.InOutCubic
+                }
+            }
+
+            NumberAnimation on orbitPhase {
+                running: transitionOverlaySobre.visible
+                from: 0.0
+                to: 1.0
+                duration: 3200
+                loops: Animation.Infinite
+            }
+
+            onOrbitPhaseChanged: {
+                if (transitionOverlaySobre.visible) {
+                    orbitBackLayer.requestPaint()
+                    orbitFrontLayer.requestPaint()
+                }
+            }
+
+            // Very subtle ambient vignette ring behind the logo
+            Rectangle {
+                anchors.centerIn: parent
+                width: 540
+                height: 540
+                radius: 270
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.035)
+                border.width: 1
+                opacity: win.transitionActive ? 1.0 : 0.0
+                scale: win.transitionActive ? 1.0 : 0.94
+                Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 700; easing.type: Easing.OutQuint } }
+            }
+
+            // Ultra-discreet monochrome floating motes
+            Item {
+                anchors.centerIn: parent
+                width: 450
+                height: 220
+                opacity: win.transitionActive ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+
+                Repeater {
+                    model: transitionOverlaySobre.ambientMotes.length
+                    Rectangle {
+                        id: mote
+                        readonly property var spec: transitionOverlaySobre.ambientMotes[index]
+                        x: parent.width / 2 + spec.dx
+                        y: parent.height / 2 + spec.dy
+                        width: spec.sz
+                        height: spec.sz
+                        radius: width / 2
+                        color: "#E4E4EB"
+                        opacity: 0.04
+
+                        SequentialAnimation on opacity {
+                            running: transitionOverlaySobre.visible
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.04; to: mote.spec.maxOp; duration: mote.spec.dur; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: mote.spec.maxOp; to: 0.04; duration: mote.spec.dur; easing.type: Easing.InOutSine }
+                        }
+                        SequentialAnimation on y {
+                            running: transitionOverlaySobre.visible
+                            loops: Animation.Infinite
+                            NumberAnimation {
+                                from: mote.parent.height / 2 + mote.spec.dy
+                                to: mote.parent.height / 2 + mote.spec.dy - 8
+                                duration: mote.spec.dur
+                                easing.type: Easing.InOutSine
+                            }
+                            NumberAnimation {
+                                from: mote.parent.height / 2 + mote.spec.dy - 8
+                                to: mote.parent.height / 2 + mote.spec.dy
+                                duration: mote.spec.dur
+                                easing.type: Easing.InOutSine
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Main Logo Container: handles clean optical entry & exit without conflicting with breathe
+            Item {
+                id: logoContainer
+                anchors.centerIn: parent
+                width: 450
+                height: 220
+
+                scale: win.transitionActive ? 1.0 : 0.96
+                opacity: win.transitionActive ? 1.0 : 0.0
+
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: win.transitionActive ? 650 : 380
+                        easing.type: win.transitionActive ? Easing.OutQuint : Easing.InCubic
+                    }
+                }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: win.transitionActive ? 450 : 320
+                        easing.type: Easing.InOutCubic
+                    }
+                }
+
+                // Inner wrapper for the exact 4.6s wosLogoBreathe (0.996 <-> 1.004, no rotation)
+                Item {
+                    id: breatheLayer
+                    anchors.fill: parent
+                    transformOrigin: Item.Center
+
+                    SequentialAnimation on scale {
+                        running: transitionOverlaySobre.visible
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.996; to: 1.004; duration: 2300; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 1.004; to: 0.996; duration: 2300; easing.type: Easing.InOutSine }
+                    }
+
+                    // 1. Back orbit sweep (upper half of tilted ellipse, behind the WOS letters)
+                    Canvas {
+                        id: orbitBackLayer
+                        anchors.fill: parent
+                        z: 1
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.reset()
+                            var s = width / 640.0
+                            var yOff = (height - 310.0 * s) * 0.5
+                            var cx = 306.0 * s
+                            var cy = 142.0 * s + yOff
+                            var rx = 214.0 * s
+                            var ry = 73.0 * s
+                            var rot = -23.5 * Math.PI / 180.0
+
+                            ctx.save()
+                            ctx.translate(cx, cy)
+                            ctx.rotate(rot)
+
+                            // Clip to upper/back half (orbitBackClip: y in [-140, 0])
+                            ctx.beginPath()
+                            ctx.rect(-320 * s, -140 * s, 640 * s, 140 * s)
+                            ctx.clip()
+
+                            // Specular white sweep (195 / 990 circumference ratio from animated-logo.html)
+                            var headAngle = -transitionOverlaySobre.orbitPhase * Math.PI * 2.0
+                            var arcLength = Math.PI * 2.0 * (195.0 / 990.0)
+                            var segments = 24
+
+                            for (var i = 0; i < segments; i++) {
+                                var t0 = i / segments
+                                var t1 = (i + 1) / segments
+                                var a0 = headAngle + arcLength * (1.0 - t0)
+                                var a1 = headAngle + arcLength * (1.0 - t1)
+                                var alpha = Math.pow(t1, 1.8) * 0.85
+
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = "rgba(255, 255, 255, " + alpha + ")"
+                                ctx.lineWidth = (1.0 + 1.8 * t1) * s
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+                            }
+
+                            ctx.restore()
+                        }
+                    }
+
+                    // 2. Static SVG Logo
+                    Image {
+                        id: transitionLogo
+                        anchors.centerIn: parent
+                        source: Quickshell.shellPath("logo.svg")
+                        width: 450
+                        height: 220
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        z: 2
+                    }
+
+                    // 3. Front orbit sweep (lower half of tilted ellipse, in front of the WOS letters)
+                    Canvas {
+                        id: orbitFrontLayer
+                        anchors.fill: parent
+                        z: 3
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.reset()
+                            var s = width / 640.0
+                            var yOff = (height - 310.0 * s) * 0.5
+                            var cx = 306.0 * s
+                            var cy = 142.0 * s + yOff
+                            var rx = 214.0 * s
+                            var ry = 73.0 * s
+                            var rot = -23.5 * Math.PI / 180.0
+
+                            ctx.save()
+                            ctx.translate(cx, cy)
+                            ctx.rotate(rot)
+
+                            // Clip to lower/front half (orbitFrontClip: y in [-2, 148])
+                            ctx.beginPath()
+                            ctx.rect(-320 * s, -2 * s, 640 * s, 150 * s)
+                            ctx.clip()
+
+                            var headAngle = -transitionOverlaySobre.orbitPhase * Math.PI * 2.0
+                            var arcLength = Math.PI * 2.0 * (195.0 / 990.0)
+                            var segments = 24
+
+                            for (var i = 0; i < segments; i++) {
+                                var t0 = i / segments
+                                var t1 = (i + 1) / segments
+                                var a0 = headAngle + arcLength * (1.0 - t0)
+                                var a1 = headAngle + arcLength * (1.0 - t1)
+                                var alpha = Math.pow(t1, 1.8) * 0.92
+
+                                // Soft white bloom around the front sweep
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = "rgba(255, 255, 255, " + (alpha * 0.22) + ")"
+                                ctx.lineWidth = (4.5 * t1) * s
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+
+                                // Crisp specular core
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = "rgba(255, 255, 255, " + alpha + ")"
+                                ctx.lineWidth = (1.0 + 1.6 * t1) * s
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+                            }
+
+                            ctx.restore()
+                        }
+                    }
+
+                    // 4. Crisp 4-point Star Pulse at (476, 61) (wosStarPulse: 3.2s ease-in-out)
+                    Item {
+                        id: starPulse
+                        readonly property real s: parent.width / 640.0
+                        readonly property real yOff: (parent.height - 310.0 * s) * 0.5
+                        x: 476.0 * s - width / 2
+                        y: 61.0 * s + yOff - height / 2
+                        width: 32
+                        height: 32
+                        z: 4
+                        scale: 0.94
+                        opacity: 0.72
+
+                        SequentialAnimation on scale {
+                            running: transitionOverlaySobre.visible
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.94; to: 1.06; duration: 1600; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.06; to: 0.94; duration: 1600; easing.type: Easing.InOutSine }
+                        }
+                        SequentialAnimation on opacity {
+                            running: transitionOverlaySobre.visible
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.72; to: 1.0; duration: 1600; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.0; to: 0.72; duration: 1600; easing.type: Easing.InOutSine }
+                        }
+
+                        Canvas {
+                            anchors.fill: parent
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.reset()
+                                ctx.translate(width / 2, height / 2)
+                                ctx.scale(starPulse.s, starPulse.s)
+
+                                ctx.beginPath()
+                                ctx.moveTo(0, -19)
+                                ctx.bezierCurveTo(1.1, -4.2, 4.2, -1.1, 19, 0)
+                                ctx.bezierCurveTo(4.2, 1.1, 1.1, 4.2, 0, 19)
+                                ctx.bezierCurveTo(-1.1, 4.2, -4.2, 1.1, -19, 0)
+                                ctx.bezierCurveTo(-4.2, -1.1, -1.1, -4.2, 0, -19)
+                                ctx.closePath()
+                                ctx.fillStyle = "#E4E4EB"
+                                ctx.fill()
+
+                                ctx.beginPath()
+                                ctx.arc(0, 0, 1.5, 0, Math.PI * 2)
+                                ctx.fillStyle = "#FFFFFF"
+                                ctx.fill()
+                            }
+                        }
+                    }
+                }
+            }
+
+            // "WORLD OF SHELLS" subtitle with subtle flanking lines
+            Row {
+                id: subtitleRow
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: logoContainer.bottom
+                anchors.topMargin: 18
+                spacing: 14
+                opacity: win.transitionActive ? 0.85 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 32
+                    height: 1
+                    color: "#8E8E98"
+                    opacity: 0.35
+                }
+
+                Text {
+                    text: "WORLD OF SHELLS"
+                    color: "#9A9AA6"
+                    font.pixelSize: 10
+                    font.letterSpacing: 5.5
+                    font.weight: Font.Normal
+                }
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 32
+                    height: 1
+                    color: "#8E8E98"
+                    opacity: 0.35
+                }
+            }
+
+            // Status text ("Activating MacShell...")
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: subtitleRow.bottom
+                anchors.topMargin: 16
+                text: win.statusText
+                color: "#71717A"
+                font.pixelSize: 12
+                font.weight: Font.Light
+                opacity: win.transitionActive ? 0.9 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 450 } }
+            }
+
+            // Minimalist 3 loading dots at the bottom
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 56
+                spacing: 8
+                opacity: win.transitionActive ? 0.85 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 350 } }
+
+                Repeater {
+                    model: 3
+                    Rectangle {
+                        width: 4
+                        height: 4
+                        radius: 2
+                        color: "#E4E4EB"
+                        opacity: 0.25
+
+                        SequentialAnimation on opacity {
+                            running: transitionOverlaySobre.visible
+                            loops: Animation.Infinite
+                            PauseAnimation { duration: index * 200 }
+                            NumberAnimation { from: 0.25; to: 0.9; duration: 450; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 0.9; to: 0.25; duration: 450; easing.type: Easing.InOutSine }
+                            PauseAnimation { duration: (2 - index) * 200 }
+                        }
+                    }
+                }
+            }
+        }
+
+// ===== FULLSCREEN TRANSITION OVERLAY =====
+        Rectangle {
+            id: transitionOverlayGemini
+            anchors.fill: parent
+            color: "#09090b"
+            opacity: (win.transitionActive && win.transitionStyle === 1) ? 1.0 : 0.0
             visible: opacity > 0.01
             z: 10000
 
@@ -990,7 +1393,7 @@ ShellRoot {
 
             // Continuous 3.2s linear orbit sweep (matches wosOrbitSweep 3.2s linear infinite)
             NumberAnimation on orbitProgress {
-                running: transitionOverlay.visible
+                running: transitionOverlayGemini.visible
                 from: 0.0
                 to: 1.0
                 duration: 3200
@@ -998,7 +1401,7 @@ ShellRoot {
             }
 
             onOrbitProgressChanged: {
-                if (transitionOverlay.visible) {
+                if (transitionOverlayGemini.visible) {
                     orbitBackCanvas.requestPaint()
                     orbitFrontCanvas.requestPaint()
                 }
@@ -1048,13 +1451,13 @@ ShellRoot {
                 Behavior on scale { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
 
                 SequentialAnimation on scale {
-                    running: transitionOverlay.visible
+                    running: transitionOverlayGemini.visible
                     loops: Animation.Infinite
                     NumberAnimation { from: 0.96; to: 1.14; duration: 2000; easing.type: Easing.InOutSine }
                     NumberAnimation { from: 1.14; to: 0.96; duration: 2000; easing.type: Easing.InOutSine }
                 }
                 SequentialAnimation on opacity {
-                    running: transitionOverlay.visible
+                    running: transitionOverlayGemini.visible
                     loops: Animation.Infinite
                     NumberAnimation { from: 0.25; to: 0.65; duration: 2000; easing.type: Easing.InOutSine }
                     NumberAnimation { from: 0.65; to: 0.25; duration: 2000; easing.type: Easing.InOutSine }
@@ -1073,7 +1476,7 @@ ShellRoot {
                 Behavior on scale { NumberAnimation { duration: 550; easing.type: Easing.OutBack } }
 
                 SequentialAnimation on opacity {
-                    running: transitionOverlay.visible
+                    running: transitionOverlayGemini.visible
                     loops: Animation.Infinite
                     NumberAnimation { from: 0.05; to: 0.12; duration: 2300; easing.type: Easing.InOutSine }
                     NumberAnimation { from: 0.12; to: 0.05; duration: 2300; easing.type: Easing.InOutSine }
@@ -1088,17 +1491,17 @@ ShellRoot {
                 height: 220
 
                 Repeater {
-                    model: transitionOverlay.particleSpecs.length
+                    model: transitionOverlayGemini.particleSpecs.length
                     Item {
                         id: pWrap
-                        readonly property var spec: transitionOverlay.particleSpecs[index]
+                        readonly property var spec: transitionOverlayGemini.particleSpecs[index]
                         // Scatter outward when transition closes (disintegration effect)
-                        x: parent.width / 2 + spec.dx * (1.0 + transitionOverlay.burstProgress * 0.45)
-                        y: parent.height / 2 + spec.dy * (1.0 + transitionOverlay.burstProgress * 0.45)
+                        x: parent.width / 2 + spec.dx * (1.0 + transitionOverlayGemini.burstProgress * 0.45)
+                        y: parent.height / 2 + spec.dy * (1.0 + transitionOverlayGemini.burstProgress * 0.45)
 
                         property real floatOffset: 0.0
                         SequentialAnimation on floatOffset {
-                            running: transitionOverlay.visible
+                            running: transitionOverlayGemini.visible
                             loops: Animation.Infinite
                             PauseAnimation { duration: pWrap.spec.delay }
                             NumberAnimation { from: 0.0; to: 1.0; duration: pWrap.spec.dur; easing.type: Easing.InOutSine }
@@ -1112,7 +1515,7 @@ ShellRoot {
                             x: pWrap.spec.driftX * pWrap.floatOffset
                             y: pWrap.spec.driftY * pWrap.floatOffset
                             color: pWrap.spec.accent === 1 ? tok.primary : (pWrap.spec.accent === 2 ? tok.tertiary : "#FFFFFF")
-                            opacity: (0.25 + 0.65 * pWrap.floatOffset) * transitionOverlay.revealProgress
+                            opacity: (0.25 + 0.65 * pWrap.floatOffset) * transitionOverlayGemini.revealProgress
 
                             // Subtle halo around each particle
                             Rectangle {
@@ -1130,7 +1533,7 @@ ShellRoot {
 
             // 5. Main Logo Container (handles Entry spring & Exit disintegration without fighting Breathe)
             Item {
-                id: logoContainer
+                id: logoContainerGemini
                 anchors.centerIn: parent
                 width: 450
                 height: 220
@@ -1159,14 +1562,14 @@ ShellRoot {
                     transformOrigin: Item.Center
 
                     SequentialAnimation on scale {
-                        running: transitionOverlay.visible
+                        running: transitionOverlayGemini.visible
                         loops: Animation.Infinite
                         NumberAnimation { from: 0.996; to: 1.004; duration: 2300; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 1.004; to: 0.996; duration: 2300; easing.type: Easing.InOutSine }
                     }
 
                     SequentialAnimation on rotation {
-                        running: transitionOverlay.visible
+                        running: transitionOverlayGemini.visible
                         loops: Animation.Infinite
                         NumberAnimation { from: -1.6; to: 1.6; duration: 2300; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 1.6; to: -1.6; duration: 2300; easing.type: Easing.InOutSine }
@@ -1183,8 +1586,8 @@ ShellRoot {
                             var s = width / 640.0
                             var cx = 306.0 * s
                             var cy = 142.0 * s + 1.0
-                            var rx = 214.0 * s * transitionOverlay.revealProgress
-                            var ry = 73.0 * s * transitionOverlay.revealProgress
+                            var rx = 214.0 * s * transitionOverlayGemini.revealProgress
+                            var ry = 73.0 * s * transitionOverlayGemini.revealProgress
                             var rot = -23.5 * Math.PI / 180.0
 
                             ctx.save()
@@ -1222,7 +1625,7 @@ ShellRoot {
                             ctx.stroke()
 
                             // Animated orbit sweep trail (comet with graduated alpha & width)
-                            var headAngle = transitionOverlay.orbitProgress * Math.PI * 2.0
+                            var headAngle = transitionOverlayGemini.orbitProgress * Math.PI * 2.0
                             var sweepLen = Math.PI * 0.42
                             var steps = 28
                             for (var i = 0; i < steps; i++) {
@@ -1258,13 +1661,13 @@ ShellRoot {
                     Item {
                         id: logoRevealClip
                         anchors.centerIn: parent
-                        width: parent.width * (0.35 + 0.65 * transitionOverlay.revealProgress)
+                        width: parent.width * (0.35 + 0.65 * transitionOverlayGemini.revealProgress)
                         height: parent.height
                         clip: true
                         z: 2
 
                         Image {
-                            id: transitionLogo
+                            id: transitionLogoGemini
                             anchors.centerIn: parent
                             source: Quickshell.shellPath("logo.svg")
                             width: 450
@@ -1286,8 +1689,8 @@ ShellRoot {
                             var s = width / 640.0
                             var cx = 306.0 * s
                             var cy = 142.0 * s + 1.0
-                            var rx = 214.0 * s * transitionOverlay.revealProgress
-                            var ry = 73.0 * s * transitionOverlay.revealProgress
+                            var rx = 214.0 * s * transitionOverlayGemini.revealProgress
+                            var ry = 73.0 * s * transitionOverlayGemini.revealProgress
                             var rot = -23.5 * Math.PI / 180.0
 
                             ctx.save()
@@ -1325,7 +1728,7 @@ ShellRoot {
                             ctx.stroke()
 
                             // Animated orbit sweep trail (front pass)
-                            var headAngle = transitionOverlay.orbitProgress * Math.PI * 2.0
+                            var headAngle = transitionOverlayGemini.orbitProgress * Math.PI * 2.0
                             var sweepLen = Math.PI * 0.42
                             var steps = 28
                             for (var i = 0; i < steps; i++) {
@@ -1378,13 +1781,13 @@ ShellRoot {
                         opacity: 0.72
 
                         SequentialAnimation on scale {
-                            running: transitionOverlay.visible
+                            running: transitionOverlayGemini.visible
                             loops: Animation.Infinite
                             NumberAnimation { from: 0.94; to: 1.08; duration: 1600; easing.type: Easing.InOutSine }
                             NumberAnimation { from: 1.08; to: 0.94; duration: 1600; easing.type: Easing.InOutSine }
                         }
                         SequentialAnimation on opacity {
-                            running: transitionOverlay.visible
+                            running: transitionOverlayGemini.visible
                             loops: Animation.Infinite
                             NumberAnimation { from: 0.72; to: 1.0; duration: 1600; easing.type: Easing.InOutSine }
                             NumberAnimation { from: 1.0; to: 0.72; duration: 1600; easing.type: Easing.InOutSine }
@@ -1431,7 +1834,7 @@ ShellRoot {
                         opacity: 0.0
 
                         SequentialAnimation on opacity {
-                            running: transitionOverlay.visible
+                            running: transitionOverlayGemini.visible
                             loops: Animation.Infinite
                             NumberAnimation { from: 0.08; to: 0.35; duration: 1600; easing.type: Easing.InOutSine }
                             NumberAnimation { from: 0.35; to: 0.08; duration: 1600; easing.type: Easing.InOutSine }
@@ -1454,7 +1857,7 @@ ShellRoot {
 
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 36 * transitionOverlay.revealProgress
+                    width: 36 * transitionOverlayGemini.revealProgress
                     height: 1
                     color: "#8E8E98"
                     opacity: 0.45
@@ -1470,7 +1873,7 @@ ShellRoot {
 
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 36 * transitionOverlay.revealProgress
+                    width: 36 * transitionOverlayGemini.revealProgress
                     height: 1
                     color: "#8E8E98"
                     opacity: 0.45
@@ -1538,7 +1941,7 @@ ShellRoot {
                             opacity: 0.35
 
                             SequentialAnimation on opacity {
-                                running: transitionOverlay.visible
+                                running: transitionOverlayGemini.visible
                                 loops: Animation.Infinite
                                 PauseAnimation { duration: index * 180 }
                                 NumberAnimation { from: 0.35; to: 1.0; duration: 380; easing.type: Easing.InOutSine }
@@ -1546,7 +1949,7 @@ ShellRoot {
                                 PauseAnimation { duration: (2 - index) * 180 }
                             }
                             SequentialAnimation on scale {
-                                running: transitionOverlay.visible
+                                running: transitionOverlayGemini.visible
                                 loops: Animation.Infinite
                                 PauseAnimation { duration: index * 180 }
                                 NumberAnimation { from: 0.85; to: 1.25; duration: 380; easing.type: Easing.InOutSine }
@@ -1559,13 +1962,11 @@ ShellRoot {
             }
         }
 
-                // Main two-pane layout
+                        // Main two-pane layout
         RowLayout {
             anchors.fill: parent
             anchors.margins: tok.sp5
             spacing: tok.sp5
-            opacity: win.transitionActive ? 0.3 : 1.0
-            Behavior on opacity { NumberAnimation { duration: 300 } }
 
             // ================= LEFT PANEL (300px) =================
             ColumnLayout {
@@ -2546,6 +2947,79 @@ ShellRoot {
                                                     win.darkTheme = (modelData === "Dark")
                                                     tok.applyTheme(win.darkTheme)
                                                 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Transition style"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Choose the animation shown when activating a shell."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: tok.sp2
+                                    Repeater {
+                                        model: ["Sobre", "Gemini"]
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 32
+                                            radius: tok.r2
+                                            color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Gemini" && win.transitionStyle === 1) ? tok.primary : tok.surfaceHigh
+                                            border.width: 1
+                                            border.color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Gemini" && win.transitionStyle === 1) ? tok.primary : tok.outlineVariant
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData
+                                                font.pixelSize: 11
+                                                font.weight: Font.Medium
+                                                color: (modelData === "Sobre" && win.transitionStyle === 0) || (modelData === "Gemini" && win.transitionStyle === 1) ? tok.fgOnPrimary : tok.fgVariant
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: win.transitionStyle = (modelData === "Sobre" ? 0 : 1)
+                                            }
+                                        }
+                                    }
+                                }
+                                // Preview buttons
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: tok.sp2
+                                    Repeater {
+                                        model: ["Sobre", "Gemini"]
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 28
+                                            radius: tok.r2
+                                            color: tok.surfaceHigh
+                                            border.width: 1
+                                            border.color: tok.outlineVariant
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "Preview " + modelData
+                                                font.pixelSize: 10
+                                                font.weight: Font.Medium
+                                                color: tok.fgVariant
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: win.previewTransition(modelData === "Sobre" ? 0 : 1)
                                             }
                                         }
                                     }
