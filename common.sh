@@ -25,6 +25,7 @@ pkill -f 'qs -c minflair' 2>/dev/null || true
 pkill -f 'qs -c trip' 2>/dev/null || true
     dms kill 2>/dev/null || true
     pkill -f 'dms run' 2>/dev/null || true
+    command -v serpantinum >/dev/null 2>&1 && serpantinum kill >/dev/null 2>&1
     pkill -f 'discord_voice_bridge.py' 2>/dev/null || true
     ps -eo pid,args | awk '/qs -c shell/ && !/awk/ {print $1}' | xargs -r kill 2>/dev/null || true
     [ -x "$ghost" ] && "$ghost" stop >/dev/null 2>&1

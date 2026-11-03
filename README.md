@@ -61,6 +61,7 @@ Or find "World of Shells" in your app launcher.
 | Nothingshell | 26 | MIT | Start qs -c nothingshell |
 | NibrasShell |  |  | Start qs -c nibras |
 | Impasto |  |  | Start qs -c impasto |
+| Serpantinum | 7.6k | AGPL-3.0 | serpantinumd start |
 
 ## Installing a shell
 

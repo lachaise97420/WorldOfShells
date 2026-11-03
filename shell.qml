@@ -580,6 +580,25 @@ ShellRoot {
             activateScript: Quickshell.shellPath("trip-activate.sh"),
             revertScript: Quickshell.shellPath("trip-revert.sh"),
             activatable: true
+        },
+        {
+            name: "Serpantinum",
+            author: "ilyamiro",
+            license: "AGPL-3.0",
+            stars: "7.6k",
+            forks: "346",
+            github: "https://github.com/ilyamiro/serpantinum",
+            video: "",
+            tagline: "Desktop shell for Hyprland, Sway and Niri.",
+            bio: "Desktop shell built with Quickshell. Bar, dock, launcher, notification center, lock screen, widgets, wallpaper-based themes and its own audio engine. Configured from a settings app.",
+            features: ["Bar & dock", "Launcher", "Notification center", "Lock screen", "Widgets", "Wallpaper themes", "Audio equalizer", "Settings app"],
+            prereqs: "Hyprland/Sway/Niri, Quickshell, Qt 6.",
+            logo: "https://raw.githubusercontent.com/ilyamiro/serpantinum/master/website/static/img/logo.png",
+            featured: "https://raw.githubusercontent.com/ilyamiro/serpantinum/master/docs/assets/previews/preview_1.png",
+            thumbs: [2, 3, 4].map(n => "https://raw.githubusercontent.com/ilyamiro/serpantinum/master/docs/assets/previews/preview_" + n + ".png"),
+            activateScript: Quickshell.shellPath("serpantinum-activate.sh"),
+            revertScript: Quickshell.shellPath("serpantinum-revert.sh"),
+            activatable: true
         }
     ]
 
@@ -648,7 +667,8 @@ ShellRoot {
         "Lucid": {branch: "main", file: "install.sh", run: "bash install.sh"},
         "Nothingshell": {branch: "master", file: "install.sh", run: "bash install.sh"},
         "NibrasShell": {branch: "quickshell", file: "install.py", run: "python3 install.py"},
-        "Impasto": {branch: "main", file: "setup", run: "bash setup"}
+        "Impasto": {branch: "main", file: "setup", run: "bash setup"},
+        "Serpantinum": {branch: "master", file: "install/install.sh", run: "bash install/install.sh"}
     })
 
     FloatingWindow {
