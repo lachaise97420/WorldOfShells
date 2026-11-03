@@ -889,7 +889,11 @@ ShellRoot {
         function revert() {
             if (win.busy || !win.shell.revertScript) return
             win.busy = true
-            win.statusText = "Restoring..."
+            win.statusText = "Reverting to Ryoku..."
+            if (win.transitionStyle !== 2) {
+                win.transitionActive = true
+                transitionTimer.restart()
+            }
             Quickshell.execDetached(["bash", win.shell.revertScript])
             revTimer.restart()
             autoRevertTimer.stop()

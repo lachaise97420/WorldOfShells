@@ -4,6 +4,10 @@ All notable changes to World of Shells will be documented in this file.
 
 ## [1.3.0] - 2026-11-03
 
+### Changed
+- Transition animation now also plays on Revert (status: "Reverting to Ryoku...")
+- Added transitionStyle property and previewTransition function
+
 ### Added
 - Transition style selector in Settings: choose between Sobre (minimalist), Dynamic (rich effects), or None (disabled)
 - Preview buttons for Sobre and Dynamic styles
