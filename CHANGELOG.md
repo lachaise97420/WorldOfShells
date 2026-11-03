@@ -2,6 +2,24 @@
 
 All notable changes to World of Shells will be documented in this file.
 
+## [1.4.0] - 2026-11-03
+
+### Added
+- **Adaptive colors**: app reads colors from multiple sources (ryoku, wal, matugen, nucleus, etc.) and applies them automatically
+- **Custom colors file path** in Settings for universal matugen compatibility
+- **applyColors** now supports 3 formats: matugen/ryoku, MaterialUI, Pywal
+- **5 color presets** in Settings: Ryoku, Ocean, Forest, Sunset, Monochrome
+- **Emergency revert button**: red button always visible when a shell is active, bypasses busy state
+- **Crash detection**: monitors active shell process every 5s, auto-reverts if crashed
+- **Usage timer**: shows elapsed time (M:SS) next to ACTIVE badge
+- **Transition animation on Revert**: transition now plays on revert too
+- **Transition style selector**: Sobre, Dynamic, or None (disable)
+- **Preview buttons** in Settings to preview transition styles
+
+### Changed
+- Renamed "Gemini" transition to "Dynamic"
+- Color sources expanded to 8 paths for universal compatibility
+
 ## [1.3.0] - 2026-11-03
 
 ### Changed

@@ -59,6 +59,7 @@ ShellRoot {
         }
     }
 
+
     FileView {
         id: windowSizeFile
         path: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/WorldOfShells/window_size"
@@ -141,10 +142,13 @@ ShellRoot {
         function applyColors(c) {
             if (!c || typeof c !== "object") return
             function usable(v) { return typeof v === "string" && v.length > 0 }
+            // Standard matugen/ryoku format
             if (usable(c.background)) bg = c.background
             if (usable(c.surface)) surface = c.surface
             if (usable(c.surfaceContainerHigh)) surfaceHigh = c.surfaceContainerHigh
+            else if (usable(c.surfaceHigh)) surfaceHigh = c.surfaceHigh
             if (usable(c.onSurface)) fg = c.onSurface
+            else if (usable(c.foreground)) fg = c.foreground
             if (usable(c.onSurfaceVariant)) fgVariant = c.onSurfaceVariant
             if (usable(c.outline)) fgMuted = c.outline
             if (usable(c.onPrimary)) fgOnPrimary = c.onPrimary
@@ -152,6 +156,19 @@ ShellRoot {
             if (usable(c.tertiary)) tertiary = c.tertiary
             if (usable(c.outline)) outline = c.outline
             if (usable(c.outlineVariant)) outlineVariant = c.outlineVariant
+            // MaterialUI format fallback
+            if (usable(c.bgBase)) bg = c.bgBase
+            if (usable(c.bgSurface)) surface = c.bgSurface
+            if (usable(c.bgElevated)) surfaceHigh = c.bgElevated
+            if (usable(c.textPrimary)) fg = c.textPrimary
+            if (usable(c.textSecondary)) fgVariant = c.textSecondary
+            if (usable(c.accent)) primary = c.accent
+            // Pywal format fallback
+            if (usable(c.color0)) bg = c.color0
+            if (usable(c.color7)) fg = c.color7
+            if (usable(c.color4)) primary = c.color4
+            if (usable(c.color5)) tertiary = c.color5
+            if (usable(c.color8)) fgMuted = c.color8
         }
     }
 
@@ -654,13 +671,89 @@ ShellRoot {
         property int selectedShell: 0
         property int shellPage: 0
         property int activeShellIndex: -1
+        property real activationTime: 0
+        property string activationTimeDisplay: ""
+        property bool shellCrashed: false
         property bool transitionActive: false
         property int transitionStyle: 0  // 0 = Sobre, 1 = Dynamic, 2 = None
+
+        readonly property var colorSources: {
+            var sources = [
+                (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/ryoku/colors.json",
+                (Quickshell.env("HOME") + "/.cache/wal/colors.json"),
+                (Quickshell.env("HOME") + "/.cache/matugen/colors.json"),
+                (Quickshell.env("HOME") + "/.config/nucleus-shell/config/colors.json"),
+                (Quickshell.env("HOME") + "/.cache/quickshell/colors.json"),
+                (Quickshell.env("HOME") + "/.cache/ukishima/colors.json"),
+                (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/colors.json",
+                (Quickshell.env("HOME") + "/.config/quickshell/materialui/colors.json")
+            ]
+            if (win.customColorsPath && win.customColorsPath.length > 0) {
+                sources.unshift(win.customColorsPath)
+            }
+            return sources
+        }
+
+        function loadAdaptiveColors() {
+            if (!win.adaptiveColors) return
+            // If custom path is set, try it first
+            for (var i = 0; i < colorSources.length; i++) {
+                try {
+                    var xhr = new XMLHttpRequest()
+                    xhr.open("GET", "file://" + colorSources[i], false)
+                    xhr.send()
+                    if (xhr.status === 0 || xhr.status === 200) {
+                        var c = JSON.parse(xhr.responseText)
+                        if (c && typeof c === "object") {
+                            tok.applyColors(c)
+                            return
+                        }
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function applyPreset(name) {
+            win.adaptiveColors = false
+            if (name === "Ryoku") {
+                tok.applyTheme(win.darkTheme)
+            } else if (name === "Ocean") {
+                tok.bg = "#0a1929"; tok.surface = "#0d2137"; tok.surfaceHigh = "#1a3a5c"
+                tok.fg = "#e0f0ff"; tok.fgVariant = "#b0d0f0"; tok.fgMuted = "#7090b0"
+                tok.fgOnPrimary = "#001a33"; tok.primary = "#4fc3f7"; tok.tertiary = "#81d4fa"
+                tok.outline = "#7090b0"; tok.outlineVariant = "#2a4a6c"
+            } else if (name === "Forest") {
+                tok.bg = "#0a1a0f"; tok.surface = "#0d2117"; tok.surfaceHigh = "#1a3a2c"
+                tok.fg = "#e0ffe8"; tok.fgVariant = "#b0f0c8"; tok.fgMuted = "#70b088"
+                tok.fgOnPrimary = "#001a0a"; tok.primary = "#66bb6a"; tok.tertiary = "#81c784"
+                tok.outline = "#70b088"; tok.outlineVariant = "#2a4a3c"
+            } else if (name === "Sunset") {
+                tok.bg = "#1a0f0a"; tok.surface = "#21150d"; tok.surfaceHigh = "#3a251a"
+                tok.fg = "#ffe8e0"; tok.fgVariant = "#f0c8b0"; tok.fgMuted = "#b08870"
+                tok.fgOnPrimary = "#1a0500"; tok.primary = "#ff7043"; tok.tertiary = "#ff8a65"
+                tok.outline = "#b08870"; tok.outlineVariant = "#4a3a2c"
+            } else if (name === "Monochrome") {
+                tok.bg = "#121212"; tok.surface = "#1e1e1e"; tok.surfaceHigh = "#2a2a2a"
+                tok.fg = "#e0e0e0"; tok.fgVariant = "#b0b0b0"; tok.fgMuted = "#808080"
+                tok.fgOnPrimary = "#000000"; tok.primary = "#ffffff"; tok.tertiary = "#cccccc"
+                tok.outline = "#808080"; tok.outlineVariant = "#3a3a3a"
+            }
+        }
+
+        Timer {
+            id: colorWatchTimer
+            interval: 2000
+            running: win.adaptiveColors
+            repeat: true
+            onTriggered: win.loadAdaptiveColors()
+        }
         property bool busy: false
         property bool confirmEnd4: false
         property bool darkTheme: true
         property int autoRevertMinutes: 0
         property bool rememberLastShell: false
+        property bool adaptiveColors: true
+        property string customColorsPath: ""
         property string lastSelectedShell: "0"
         property bool confirmInstall: false
         property bool scriptOpen: false
@@ -804,9 +897,53 @@ ShellRoot {
         }
 
         Timer {
+            id: usageTimer
+            interval: 1000
+            running: win.activeShellIndex >= 0
+            repeat: true
+            onTriggered: {
+                if (win.activationTime > 0) {
+                    var elapsed = Math.floor((Date.now() - win.activationTime) / 1000)
+                    var mins = Math.floor(elapsed / 60)
+                    var secs = elapsed % 60
+                    win.activationTimeDisplay = mins + ":" + (secs < 10 ? "0" : "") + secs
+                }
+            }
+        }
+
+        Timer {
+            id: crashCheckTimer
+            interval: 5000
+            running: win.activeShellIndex >= 0 && !win.busy
+            repeat: true
+            onTriggered: {
+                if (win.activeShellIndex < 0 || win.activeShellIndex >= win.shells.length) return
+                var shellName = win.shells[win.activeShellIndex].name.toLowerCase().replace(/ /g, "")
+                var checkProc = Qt.createQmlObject('import Quickshell.Io; Process {}', win)
+                var stdout = ""
+                checkProc.command = ["bash", "-c", "pgrep -f 'qs -c " + shellName + "' >/dev/null 2>&1 && echo OK || echo CRASH"]
+                checkProc.onStdoutLine.connect(function(line) { stdout = line.trim() })
+                checkProc.onExited.connect(function(code) {
+                    if (stdout === "CRASH" && win.activeShellIndex >= 0) {
+                        win.shellCrashed = true
+                        win.statusText = "Shell crashed! Reverting..."
+                        win.revert()
+                    }
+                })
+                checkProc.running = true
+            }
+        }
+
+        Timer {
             id: transitionTimer
             interval: 2500
             onTriggered: win.transitionActive = false
+        }
+
+        Timer {
+            id: colorAdaptTimer
+            interval: 3000
+            onTriggered: win.loadAdaptiveColors()
         }
 
         function viewScript() {
@@ -855,11 +992,14 @@ ShellRoot {
                 win.transitionActive = true
                 transitionTimer.restart()
             }
+            colorAdaptTimer.restart()
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
             autoRevertTimer.restart()
             win.activeShellIndex = win.selectedShell
+            win.activationTime = Date.now()
+            win.shellCrashed = false
         }
         function previewTransition(style) {
             if (style === 2) return
@@ -881,6 +1021,8 @@ ShellRoot {
             actProcess.running = true
             autoRevertTimer.restart()
             win.activeShellIndex = win.selectedShell
+            win.activationTime = Date.now()
+            win.shellCrashed = false
         }
         function cancelEnd4Activate() {
             win.confirmEnd4 = false
@@ -898,6 +1040,9 @@ ShellRoot {
             revTimer.restart()
             autoRevertTimer.stop()
             win.activeShellIndex = -1
+            win.activationTime = 0
+            win.activationTimeDisplay = ""
+            win.shellCrashed = false
         }
 
         // Transition animation when switching selectedShell
@@ -2052,6 +2197,68 @@ ShellRoot {
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
+
+                    // Emergency revert button (always visible when a shell is active)
+                    Rectangle {
+                        visible: win.activeShellIndex >= 0
+                        Layout.fillWidth: true
+                        height: 28
+                        radius: tok.r2
+                        color: "#c62828"
+                        border.width: 1
+                        border.color: "#ef5350"
+                        scale: emergMouse.pressed ? 0.95 : (emergMouse.containsMouse ? 1.03 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: tok.animFast; easing.type: Easing.OutQuad } }
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: "\u26A0"
+                                font.pixelSize: 12
+                                color: "#ffffff"
+                            }
+                            Text {
+                                text: "EMERGENCY REVERT"
+                                font.pixelSize: 10
+                                font.weight: Font.Bold
+                                color: "#ffffff"
+                            }
+                            Text {
+                                visible: win.activationTimeDisplay !== ""
+                                text: "(" + win.activationTimeDisplay + ")"
+                                font.pixelSize: 10
+                                color: "#ffffff"
+                                opacity: 0.8
+                            }
+                        }
+                        MouseArea {
+                            id: emergMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: win.revert()
+                        }
+                    }
+
+                    // Crash notification
+                    Rectangle {
+                        visible: win.shellCrashed
+                        Layout.fillWidth: true
+                        height: 24
+                        radius: tok.r2
+                        color: "#ff6f00"
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: "Shell crashed! Reverted to Ryoku."
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: "#ffffff"
+                            }
+                        }
+                    }
                 }
 
                 // Shell Selector Cards
@@ -2131,20 +2338,32 @@ ShellRoot {
                                     }
                                 }
 
-                                // Active shell badge
-                                Rectangle {
-                                    Layout.preferredWidth: activeBadgeText.implicitWidth + tok.sp2 * 2
-                                    Layout.preferredHeight: 22
-                                    radius: 11
-                                    color: "#22c55e"
+                                // Active shell badge + usage timer
+                                RowLayout {
+                                    spacing: 4
                                     visible: win.activeShellIndex === cardRect.shellIndex
+
+                                    Rectangle {
+                                        Layout.preferredWidth: activeBadgeText.implicitWidth + tok.sp2 * 2
+                                        Layout.preferredHeight: 22
+                                        radius: 11
+                                        color: "#22c55e"
+                                        Text {
+                                            id: activeBadgeText
+                                            anchors.centerIn: parent
+                                            text: "ACTIVE"
+                                            font.pixelSize: 9
+                                            font.weight: Font.Bold
+                                            color: "#ffffff"
+                                        }
+                                    }
+
                                     Text {
-                                        id: activeBadgeText
-                                        anchors.centerIn: parent
-                                        text: "ACTIVE"
+                                        visible: win.activationTimeDisplay !== ""
+                                        text: win.activationTimeDisplay
                                         font.pixelSize: 9
-                                        font.weight: Font.Bold
-                                        color: "#ffffff"
+                                        font.weight: Font.Medium
+                                        color: tok.fgMuted
                                     }
                                 }
                             }
@@ -3029,6 +3248,129 @@ ShellRoot {
                                                 anchors.fill: parent
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: win.previewTransition(modelData === "Sobre" ? 0 : 1)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Adaptive colors"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Adapt app colors to the active shell's theme."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 32
+                                    radius: tok.r2
+                                    color: win.adaptiveColors ? tok.primary : tok.surfaceHigh
+                                    border.width: 1
+                                    border.color: win.adaptiveColors ? tok.primary : tok.outlineVariant
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: win.adaptiveColors ? "On" : "Off"
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        color: win.adaptiveColors ? tok.fgOnPrimary : tok.fgVariant
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            win.adaptiveColors = !win.adaptiveColors
+                                            if (win.adaptiveColors) win.loadAdaptiveColors()
+                                        }
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Custom colors file"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Path to a colors.json file (leave empty for auto-detect)."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 32
+                                    radius: tok.r2
+                                    color: tok.surfaceHigh
+                                    border.width: 1
+                                    border.color: tok.outlineVariant
+                                    TextInput {
+                                        anchors.fill: parent
+                                        anchors.margins: tok.sp2
+                                        text: win.customColorsPath
+                                        font.pixelSize: 11
+                                        color: tok.fg
+                                        onTextChanged: win.customColorsPath = text
+                                        onAccepted: win.loadAdaptiveColors()
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: tok.sp2
+                                Text {
+                                    text: "Color presets"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: tok.fg
+                                }
+                                Text {
+                                    text: "Quick color themes (disables adaptive colors)."
+                                    font.pixelSize: 11
+                                    color: tok.fgMuted
+                                    wrapMode: Text.Wrap
+                                    Layout.fillWidth: true
+                                }
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 5
+                                    rowSpacing: tok.sp2
+                                    columnSpacing: tok.sp2
+                                    Repeater {
+                                        model: ["Ryoku", "Ocean", "Forest", "Sunset", "Mono"]
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 32
+                                            radius: tok.r2
+                                            color: tok.surfaceHigh
+                                            border.width: 1
+                                            border.color: tok.outlineVariant
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData
+                                                font.pixelSize: 10
+                                                font.weight: Font.Medium
+                                                color: tok.fgVariant
+                                            }
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: win.applyPreset(modelData === "Mono" ? "Monochrome" : modelData)
                                             }
                                         }
                                     }
