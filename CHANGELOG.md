@@ -2,6 +2,18 @@
 
 All notable changes to World of Shells will be documented in this file.
 
+## [1.1.0] - 2026-11-03
+
+### Added
+- **Fullscreen transition overlay** with animated World of Shells logo when activating a shell
+- Logo breathe animation (scale 0.996 ↔ 1.004), subtle rotation, glow pulse
+- Loading indicator dots and activating status text
+- Main content fades to 30% opacity during transition
+- Transition duration: 2.5 seconds
+
+### Changed
+- 20 shells total (added CuteShell, Minflair, Tripathi Quickshell)
+
 ## [1.0.0] - 2026-11-02
 
 ### Added

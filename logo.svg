@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 310" role="img" aria-label="Animated Logo">
+  <defs>
+    <linearGradient id="wosMetalMain" x1="0%" y1="0%" x2="15%" y2="100%"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="38%" stopColor="#EAECEF"/><stop offset="78%" stopColor="#C8CAD2"/><stop offset="100%" stopColor="#A8ABB5"/></linearGradient>
+    <linearGradient id="wosMetalLeftW" x1="0%" y1="0%" x2="100%" y2="90%"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="50%" stopColor="#E2E4E9"/><stop offset="100%" stopColor="#9FA2AC"/></linearGradient>
+    <linearGradient id="wosCreaseShadow" x1="0%" y1="20%" x2="85%" y2="75%"><stop offset="0%" stopColor="#09090B" stopOpacity="0.62"/><stop offset="45%" stopColor="#09090B" stopOpacity="0.18"/><stop offset="100%" stopColor="#09090B" stopOpacity="0"/></linearGradient>
+    <radialGradient id="wosDiscGradient" cx="38%" cy="28%" r="75%"><stop offset="0%" stopColor="#FFFFFF"/><stop offset="45%" stopColor="#E4E6EB"/><stop offset="85%" stopColor="#B8BAC4"/><stop offset="100%" stopColor="#9E9FA9"/></radialGradient>
+    <linearGradient id="wosOrbitStatic" x1="0%" y1="50%" x2="100%" y2="50%"><stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.88"/><stop offset="16%" stopColor="#D4D4DC" stopOpacity="0.32"/><stop offset="50%" stopColor="#71717A" stopOpacity="0.14"/><stop offset="84%" stopColor="#D4D4DC" stopOpacity="0.35"/><stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.95"/></linearGradient>
+    <linearGradient id="wosLineLeft" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#8E8E98" stopOpacity="0"/><stop offset="100%" stopColor="#8E8E98" stopOpacity="0.55"/></linearGradient>
+    <linearGradient id="wosLineRight" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#8E8E98" stopOpacity="0.55"/><stop offset="100%" stopColor="#8E8E98" stopOpacity="0"/></linearGradient>
+    <filter id="wosApexGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="orbitBackClip"><rect x="-320" y="-140" width="640" height="140"/></clipPath>
+    <clipPath id="orbitFrontClip"><rect x="-320" y="-2" width="640" height="150"/></clipPath>
+    <mask id="wosODiscMask"><rect x="0" y="0" width="640" height="310" fill="white"/><path d="M 332 107 C 334.2 129.5, 342.5 137.8, 365 140 C 342.5 142.2, 334.2 150.5, 332 173 C 329.8 150.5, 321.5 142.2, 299 140 C 321.5 137.8, 329.8 129.5, 332 107 Z" fill="black"/></mask>
+  </defs>
+  <g transform="translate(306, 142) rotate(-23.5)">
+    <ellipse cx="0" cy="0" rx="214" ry="73" fill="none" stroke="url(#wosOrbitStatic)" strokeWidth="1.65" clipPath="url(#orbitBackClip)"/>
+    <path d="M 125 -59 A 214 73 0 0 1 214 0" fill="none" stroke="#FFFFFF" strokeWidth="3.1" strokeLinecap="round" filter="url(#wosApexGlow)" opacity="0.92"/>
+    <ellipse class="orbit-sweep" cx="0" cy="0" rx="214" ry="73" fill="none" stroke="#FFFFFF" strokeWidth="2.8" strokeLinecap="round" strokeDasharray="195 795" clipPath="url(#orbitBackClip)" filter="url(#wosApexGlow)" opacity="0.95"/>
+  </g>
+  <g transform="translate(306, 142) rotate(-23.5)">
+    <ellipse cx="0" cy="0" rx="214" ry="73" fill="none" stroke="url(#wosOrbitStatic)" strokeWidth="1.5" clipPath="url(#orbitFrontClip)"/>
+    <path d="M -214 -4 A 214 73 0 0 0 -130 58" fill="none" stroke="#FFFFFF" strokeWidth="3.0" strokeLinecap="round" filter="url(#wosApexGlow)" opacity="0.88"/>
+    <ellipse class="orbit-sweep" cx="0" cy="0" rx="214" ry="73" fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" strokeDasharray="195 795" clipPath="url(#orbitFrontClip)" filter="url(#wosApexGlow)" opacity="0.9"/>
+  </g>
+  <g filter="drop-shadow(0px 10px 24px rgba(0,0,0,0.65))">
+    <path d="M 134 94 L 164 94 L 192 153 L 215 107 L 230 137 L 202 186 L 180 186 Z" fill="url(#wosMetalLeftW)"/>
+    <polygon points="190,149 216,105 227,128 202,174" fill="url(#wosCreaseShadow)"/>
+    <path d="M 190 94 L 220 94 L 246 152 L 273 94 L 303 94 L 257 186 L 235 186 Z" fill="url(#wosMetalMain)"/>
+    <circle cx="332" cy="140" r="49" fill="url(#wosDiscGradient)" mask="url(#wosODiscMask)"/>
+    <path d="M 498 94 L 422 94 C 399 94, 389 105, 389 121 C 389 138, 401 149, 423 149 L 457 149 C 464 149, 468 152.5, 468 157.5 C 468 162.5, 464 166, 456 166 L 394 166 L 382 186 L 459 186 C 483 186, 495 174, 495 157 C 495 139, 483 129, 460 129 L 425 129 C 418 129, 415 125.5, 415 120.5 C 415 115.5, 418 113, 425 113 L 486 113 Z" fill="url(#wosMetalMain)"/>
+  </g>
+  <g class="star-pulse">
+    <path d="M 0 -19 C 1.1 -4.2, 4.2 -1.1, 19 0 C 4.2 1.1, 1.1 4.2, 0 19 C -1.1 4.2, -4.2 1.1, -19 0 C -4.2 -1.1, -1.1 -4.2, 0 -19 Z" fill="#E4E4EB"/>
+    <circle cx="0" cy="0" r="1.5" fill="#FFFFFF" filter="url(#wosApexGlow)"/>
+  </g>
+  <g transform="translate(0, 224)">
+    <line x1="168" y1="-3.5" x2="214" y2="-3.5" stroke="url(#wosLineLeft)" strokeWidth="0.9"/>
+    <text x="333" y="0" textAnchor="middle" fill="#9A9AA6" fontSize="9.5" fontWeight="400" fontFamily="-apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', sans-serif" letterSpacing="0.54em">WORLD OF SHELLS</text>
+    <line x1="440" y1="-3.5" x2="486" y2="-3.5" stroke="url(#wosLineRight)" strokeWidth="0.9"/>
+  </g>
+</svg>

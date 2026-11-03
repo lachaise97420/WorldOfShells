@@ -654,6 +654,7 @@ ShellRoot {
         property int selectedShell: 0
         property int shellPage: 0
         property int activeShellIndex: -1
+        property bool transitionActive: false
         property bool busy: false
         property bool confirmEnd4: false
         property bool darkTheme: true
@@ -801,6 +802,12 @@ ShellRoot {
             }
         }
 
+        Timer {
+            id: transitionTimer
+            interval: 2500
+            onTriggered: win.transitionActive = false
+        }
+
         function viewScript() {
             if (!installer) return
             scriptText = ""
@@ -843,6 +850,8 @@ ShellRoot {
             if (win.shell.name.startsWith("end-4")) { win.confirmEnd4 = true; return }
             win.busy = true
             win.statusText = "Activating " + win.shell.name + "..."
+            win.transitionActive = true
+            transitionTimer.restart()
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
@@ -853,6 +862,8 @@ ShellRoot {
             win.confirmEnd4 = false
             win.busy = true
             win.statusText = "Backing up and starting the end-4 installer..."
+            win.transitionActive = true
+            transitionTimer.restart()
             actProcess.target = win.shell.name
             actProcess.command = ["bash", win.shell.activateScript]
             actProcess.running = true
@@ -931,11 +942,167 @@ ShellRoot {
             }
         }
 
+        // ===== FULLSCREEN TRANSITION OVERLAY =====
+        Rectangle {
+            id: transitionOverlay
+            anchors.fill: parent
+            color: "#09090b"
+            opacity: win.transitionActive ? 1.0 : 0.0
+            visible: opacity > 0.01
+            z: 10000
+
+            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+            // Subtle radial glow behind logo
+            Rectangle {
+                anchors.centerIn: parent
+                width: 600; height: 600
+                radius: 300
+                color: "transparent"
+                border.color: Qt.rgba(1,1,1,0.03)
+                border.width: 1
+                opacity: win.transitionActive ? 0.6 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 400 } }
+            }
+
+            // Glow pulse behind logo
+            Rectangle {
+                anchors.centerIn: parent
+                width: 500; height: 500
+                radius: 250
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+                border.width: 2
+                opacity: win.transitionActive ? 0.5 : 0.0
+                scale: win.transitionActive ? 1.0 : 0.8
+
+                Behavior on opacity { NumberAnimation { duration: 600 } }
+                Behavior on scale { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+
+                SequentialAnimation on scale {
+                    running: win.transitionActive
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 1.0; to: 1.15; duration: 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.15; to: 1.0; duration: 2000; easing.type: Easing.InOutSine }
+                }
+                SequentialAnimation on opacity {
+                    running: win.transitionActive
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.3; to: 0.6; duration: 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.6; to: 0.3; duration: 2000; easing.type: Easing.InOutSine }
+                }
+            }
+
+            // Logo container
+            Item {
+                id: logoContainer
+                anchors.centerIn: parent
+                width: 450
+                height: 220
+
+                // Breathe animation
+                scale: win.transitionActive ? 1.0 : 0.92
+                opacity: win.transitionActive ? 1.0 : 0.0
+
+                Behavior on scale { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+
+                // Continuous breathe while visible
+                SequentialAnimation on scale {
+                    running: win.transitionActive
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.996; to: 1.004; duration: 2300; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.004; to: 0.996; duration: 2300; easing.type: Easing.InOutSine }
+                }
+
+                // Subtle continuous rotation while visible
+                RotationAnimation on rotation {
+                    running: win.transitionActive
+                    loops: Animation.Infinite
+                    from: -2
+                    to: 2
+                    duration: 4000
+                    easing.type: Easing.InOutSine
+                    direction: RotationAnimation.Shortest
+                }
+
+                Image {
+                    id: transitionLogo
+                    anchors.centerIn: parent
+                    source: Quickshell.shellPath("logo.svg")
+                    width: 450
+                    height: 220
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                    opacity: 1.0
+                }
+
+            }
+
+            // "WORLD OF SHELLS" text below logo
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: logoContainer.bottom
+                anchors.topMargin: 20
+                text: "WORLD OF SHELLS"
+                color: "#9A9AA6"
+                font.pixelSize: 11
+                font.letterSpacing: 6
+                font.weight: Font.Light
+                opacity: win.transitionActive ? 0.8 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+            }
+
+            // Activating text
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: logoContainer.bottom
+                anchors.topMargin: 48
+                text: win.statusText
+                color: "#71717A"
+                font.pixelSize: 12
+                font.weight: Font.Light
+                opacity: win.transitionActive ? 0.9 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 400 } }
+            }
+
+            // Loading indicator dots
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 60
+                spacing: 8
+                opacity: win.transitionActive ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 300 } }
+
+                Repeater {
+                    model: 3
+                    Rectangle {
+                        width: 6; height: 6; radius: 3
+                        color: "#FFFFFF"
+                        opacity: 0.4
+
+                        SequentialAnimation on opacity {
+                            running: win.transitionActive
+                            loops: Animation.Infinite
+                            PauseAnimation { duration: index * 200 }
+                            NumberAnimation { from: 0.4; to: 1.0; duration: 400; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.0; to: 0.4; duration: 400; easing.type: Easing.InOutSine }
+                            PauseAnimation { duration: (2 - index) * 200 }
+                        }
+                    }
+                }
+            }
+        }
+
         // Main two-pane layout
         RowLayout {
             anchors.fill: parent
             anchors.margins: tok.sp5
             spacing: tok.sp5
+            opacity: win.transitionActive ? 0.3 : 1.0
+            Behavior on opacity { NumberAnimation { duration: 300 } }
 
             // ================= LEFT PANEL (300px) =================
             ColumnLayout {
