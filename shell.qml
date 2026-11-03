@@ -942,7 +942,7 @@ ShellRoot {
             }
         }
 
-        // ===== FULLSCREEN TRANSITION OVERLAY =====
+// ===== FULLSCREEN TRANSITION OVERLAY =====
         Rectangle {
             id: transitionOverlay
             anchors.fill: parent
@@ -951,152 +951,615 @@ ShellRoot {
             visible: opacity > 0.01
             z: 10000
 
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            // Animation properties driving the 60fps orbit, reveal & disintegration
+            property real orbitProgress: 0.0
+            property real revealProgress: win.transitionActive ? 1.0 : 0.0
+            property real burstProgress: win.transitionActive ? 0.0 : 1.0
 
-            // Subtle radial glow behind logo
-            Rectangle {
-                anchors.centerIn: parent
-                width: 600; height: 600
-                radius: 300
-                color: "transparent"
-                border.color: Qt.rgba(1,1,1,0.03)
-                border.width: 1
-                opacity: win.transitionActive ? 0.6 : 0.0
-                Behavior on opacity { NumberAnimation { duration: 400 } }
+            // Pre-configured 9 floating particles (x, y offsets from center, size, speed, drift, colorRole)
+            readonly property var particleSpecs: [
+                { dx: -210, dy: -68, sz: 3.5, dur: 2200, delay: 0,   driftX: -18, driftY: -22, accent: 0 },
+                { dx: -145, dy:  74, sz: 2.5, dur: 2600, delay: 180, driftX: -14, driftY:  18, accent: 1 },
+                { dx:  -65, dy: -92, sz: 3.0, dur: 2400, delay: 320, driftX:  -8, driftY: -25, accent: 2 },
+                { dx:   45, dy: -88, sz: 2.5, dur: 2100, delay: 120, driftX:  10, driftY: -20, accent: 0 },
+                { dx:  168, dy: -52, sz: 4.0, dur: 2700, delay: 400, driftX:  22, driftY: -16, accent: 1 },
+                { dx:  220, dy:  18, sz: 3.0, dur: 2300, delay: 250, driftX:  26, driftY:   8, accent: 0 },
+                { dx:  135, dy:  82, sz: 2.5, dur: 2500, delay: 90,  driftX:  16, driftY:  22, accent: 2 },
+                { dx:  -15, dy:  96, sz: 3.5, dur: 2800, delay: 300, driftX:   4, driftY:  24, accent: 1 },
+                { dx: -235, dy:  12, sz: 2.8, dur: 2350, delay: 210, driftX: -24, driftY:   6, accent: 0 }
+            ]
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: win.transitionActive ? 300 : 450
+                    easing.type: win.transitionActive ? Easing.OutCubic : Easing.InCubic
+                }
+            }
+            Behavior on revealProgress {
+                NumberAnimation {
+                    duration: win.transitionActive ? 650 : 380
+                    easing.type: win.transitionActive ? Easing.OutCubic : Easing.InCubic
+                }
+            }
+            Behavior on burstProgress {
+                NumberAnimation {
+                    duration: win.transitionActive ? 450 : 420
+                    easing.type: Easing.OutCubic
+                }
             }
 
-            // Glow pulse behind logo
+            // Continuous 3.2s linear orbit sweep (matches wosOrbitSweep 3.2s linear infinite)
+            NumberAnimation on orbitProgress {
+                running: transitionOverlay.visible
+                from: 0.0
+                to: 1.0
+                duration: 3200
+                loops: Animation.Infinite
+            }
+
+            onOrbitProgressChanged: {
+                if (transitionOverlay.visible) {
+                    orbitBackCanvas.requestPaint()
+                    orbitFrontCanvas.requestPaint()
+                }
+            }
+
+            // 1. Matugen-tinted outer ambient halo
             Rectangle {
                 anchors.centerIn: parent
-                width: 500; height: 500
-                radius: 250
+                width: 680; height: 680
+                radius: 340
                 color: "transparent"
-                border.color: Qt.rgba(1, 1, 1, 0.06)
-                border.width: 2
-                opacity: win.transitionActive ? 0.5 : 0.0
-                scale: win.transitionActive ? 1.0 : 0.8
+                border.color: tok.primary
+                border.width: 1
+                opacity: win.transitionActive ? 0.12 : 0.0
+                scale: win.transitionActive ? 1.0 : 1.35
+                Behavior on opacity { NumberAnimation { duration: 450 } }
+                Behavior on scale { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
+            }
 
-                Behavior on opacity { NumberAnimation { duration: 600 } }
-                Behavior on scale { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+            // 2. Center reveal / shockwave ring on entry & disintegration wave on exit
+            Rectangle {
+                id: shockwaveRing
+                anchors.centerIn: parent
+                width: 460; height: 230
+                radius: 115
+                color: "transparent"
+                border.color: tok.primary
+                border.width: 2
+                scale: win.transitionActive ? 1.18 : 0.35
+                opacity: win.transitionActive ? 0.0 : 0.55
+                Behavior on scale { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.OutQuad } }
+            }
+
+            // 3. Multi-layered pulsing glow behind logo
+            Rectangle {
+                anchors.centerIn: parent
+                width: 520; height: 520
+                radius: 260
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.08)
+                border.width: 2
+                opacity: win.transitionActive ? 0.55 : 0.0
+                scale: win.transitionActive ? 1.0 : 0.75
+
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+                Behavior on scale { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
 
                 SequentialAnimation on scale {
-                    running: win.transitionActive
+                    running: transitionOverlay.visible
                     loops: Animation.Infinite
-                    NumberAnimation { from: 1.0; to: 1.15; duration: 2000; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 1.15; to: 1.0; duration: 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.96; to: 1.14; duration: 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.14; to: 0.96; duration: 2000; easing.type: Easing.InOutSine }
                 }
                 SequentialAnimation on opacity {
-                    running: win.transitionActive
+                    running: transitionOverlay.visible
                     loops: Animation.Infinite
-                    NumberAnimation { from: 0.3; to: 0.6; duration: 2000; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 0.6; to: 0.3; duration: 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.25; to: 0.65; duration: 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.65; to: 0.25; duration: 2000; easing.type: Easing.InOutSine }
                 }
             }
 
-            // Logo container
+            // Soft inner core glow (Matugen primary + white blend)
+            Rectangle {
+                anchors.centerIn: parent
+                width: 340; height: 150
+                radius: 75
+                color: tok.primary
+                opacity: win.transitionActive ? 0.07 : 0.0
+                scale: win.transitionActive ? 1.0 : 0.5
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+                Behavior on scale { NumberAnimation { duration: 550; easing.type: Easing.OutBack } }
+
+                SequentialAnimation on opacity {
+                    running: transitionOverlay.visible
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.05; to: 0.12; duration: 2300; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.12; to: 0.05; duration: 2300; easing.type: Easing.InOutSine }
+                }
+            }
+
+            // 4. Floating & scattering star particles (9 particles for 60fps)
+            Item {
+                id: particleField
+                anchors.centerIn: parent
+                width: 450
+                height: 220
+
+                Repeater {
+                    model: transitionOverlay.particleSpecs.length
+                    Item {
+                        id: pWrap
+                        readonly property var spec: transitionOverlay.particleSpecs[index]
+                        // Scatter outward when transition closes (disintegration effect)
+                        x: parent.width / 2 + spec.dx * (1.0 + transitionOverlay.burstProgress * 0.45)
+                        y: parent.height / 2 + spec.dy * (1.0 + transitionOverlay.burstProgress * 0.45)
+
+                        property real floatOffset: 0.0
+                        SequentialAnimation on floatOffset {
+                            running: transitionOverlay.visible
+                            loops: Animation.Infinite
+                            PauseAnimation { duration: pWrap.spec.delay }
+                            NumberAnimation { from: 0.0; to: 1.0; duration: pWrap.spec.dur; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.0; to: 0.0; duration: pWrap.spec.dur; easing.type: Easing.InOutSine }
+                        }
+
+                        Rectangle {
+                            width: pWrap.spec.sz
+                            height: pWrap.spec.sz
+                            radius: width / 2
+                            x: pWrap.spec.driftX * pWrap.floatOffset
+                            y: pWrap.spec.driftY * pWrap.floatOffset
+                            color: pWrap.spec.accent === 1 ? tok.primary : (pWrap.spec.accent === 2 ? tok.tertiary : "#FFFFFF")
+                            opacity: (0.25 + 0.65 * pWrap.floatOffset) * transitionOverlay.revealProgress
+
+                            // Subtle halo around each particle
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: parent.width * 2.6
+                                height: parent.height * 2.6
+                                radius: width / 2
+                                color: parent.color
+                                opacity: 0.22
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 5. Main Logo Container (handles Entry spring & Exit disintegration without fighting Breathe)
             Item {
                 id: logoContainer
                 anchors.centerIn: parent
                 width: 450
                 height: 220
 
-                // Breathe animation
-                scale: win.transitionActive ? 1.0 : 0.92
+                // Progressive construction scale on entry (OutBack) & disintegration scale on exit
+                scale: win.transitionActive ? 1.0 : 0.74
                 opacity: win.transitionActive ? 1.0 : 0.0
 
-                Behavior on scale { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
-                Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
-
-                // Continuous breathe while visible
-                SequentialAnimation on scale {
-                    running: win.transitionActive
-                    loops: Animation.Infinite
-                    NumberAnimation { from: 0.996; to: 1.004; duration: 2300; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 1.004; to: 0.996; duration: 2300; easing.type: Easing.InOutSine }
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: win.transitionActive ? 580 : 380
+                        easing.type: win.transitionActive ? Easing.OutBack : Easing.InBack
+                    }
+                }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: win.transitionActive ? 380 : 350
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
-                // Subtle continuous rotation while visible
-                RotationAnimation on rotation {
-                    running: win.transitionActive
-                    loops: Animation.Infinite
-                    from: -2
-                    to: 2
-                    duration: 4000
-                    easing.type: Easing.InOutSine
-                    direction: RotationAnimation.Shortest
-                }
+                // Inner wrapper dedicated to continuous Breathe & Rotation (wosLogoBreathe 4.6s)
+                Item {
+                    id: logoBreatheWrapper
+                    anchors.fill: parent
+                    transformOrigin: Item.Center
 
-                Image {
-                    id: transitionLogo
-                    anchors.centerIn: parent
-                    source: Quickshell.shellPath("logo.svg")
-                    width: 450
-                    height: 220
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    mipmap: true
-                    opacity: 1.0
-                }
+                    SequentialAnimation on scale {
+                        running: transitionOverlay.visible
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.996; to: 1.004; duration: 2300; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 1.004; to: 0.996; duration: 2300; easing.type: Easing.InOutSine }
+                    }
 
+                    SequentialAnimation on rotation {
+                        running: transitionOverlay.visible
+                        loops: Animation.Infinite
+                        NumberAnimation { from: -1.6; to: 1.6; duration: 2300; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 1.6; to: -1.6; duration: 2300; easing.type: Easing.InOutSine }
+                    }
+
+                    // LAYER 1 (BACK): Upper half of the tilted orbit passing BEHIND the WOS letters
+                    Canvas {
+                        id: orbitBackCanvas
+                        anchors.fill: parent
+                        z: 1
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.reset()
+                            var s = width / 640.0
+                            var cx = 306.0 * s
+                            var cy = 142.0 * s + 1.0
+                            var rx = 214.0 * s * transitionOverlay.revealProgress
+                            var ry = 73.0 * s * transitionOverlay.revealProgress
+                            var rot = -23.5 * Math.PI / 180.0
+
+                            ctx.save()
+                            ctx.translate(cx, cy)
+                            ctx.rotate(rot)
+
+                            // Clip to back/upper half of orbit (y < 0 in rotated ellipse space)
+                            ctx.beginPath()
+                            ctx.rect(-260 * s, -120 * s, 520 * s, 120 * s)
+                            ctx.clip()
+
+                            // Base subtle static orbit track
+                            ctx.beginPath()
+                            for (var a = Math.PI; a <= Math.PI * 2.02; a += 0.06) {
+                                var px = rx * Math.cos(a)
+                                var py = ry * Math.sin(a)
+                                if (a === Math.PI) ctx.moveTo(px, py)
+                                else ctx.lineTo(px, py)
+                            }
+                            ctx.strokeStyle = "rgba(212, 212, 220, 0.28)"
+                            ctx.lineWidth = 1.4
+                            ctx.stroke()
+
+                            // Right-apex static highlight from animated-logo.html
+                            ctx.beginPath()
+                            for (var h = -0.62; h <= 0.0; h += 0.04) {
+                                var hx = rx * Math.cos(h)
+                                var hy = ry * Math.sin(h)
+                                if (h === -0.62) ctx.moveTo(hx, hy)
+                                else ctx.lineTo(hx, hy)
+                            }
+                            ctx.strokeStyle = "rgba(255, 255, 255, 0.75)"
+                            ctx.lineWidth = 2.2
+                            ctx.lineCap = "round"
+                            ctx.stroke()
+
+                            // Animated orbit sweep trail (comet with graduated alpha & width)
+                            var headAngle = transitionOverlay.orbitProgress * Math.PI * 2.0
+                            var sweepLen = Math.PI * 0.42
+                            var steps = 28
+                            for (var i = 0; i < steps; i++) {
+                                var t0 = i / steps
+                                var t1 = (i + 1) / steps
+                                var a0 = headAngle - sweepLen * (1.0 - t0)
+                                var a1 = headAngle - sweepLen * (1.0 - t1)
+
+                                // Outer Matugen primary glow along trail
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = Qt.rgba(tok.primary.r, tok.primary.g, tok.primary.b, t1 * t1 * 0.45)
+                                ctx.lineWidth = 5.5 * t1
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+
+                                // Bright white core sweep
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = "rgba(255, 255, 255, " + (t1 * t1 * 0.95) + ")"
+                                ctx.lineWidth = 0.8 + 2.2 * t1
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+                            }
+
+                            ctx.restore()
+                        }
+                    }
+
+                    // LAYER 2 (MIDDLE): The WOS metallic SVG logo with center-out progressive reveal
+                    Item {
+                        id: logoRevealClip
+                        anchors.centerIn: parent
+                        width: parent.width * (0.35 + 0.65 * transitionOverlay.revealProgress)
+                        height: parent.height
+                        clip: true
+                        z: 2
+
+                        Image {
+                            id: transitionLogo
+                            anchors.centerIn: parent
+                            source: Quickshell.shellPath("logo.svg")
+                            width: 450
+                            height: 220
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+                    }
+
+                    // LAYER 3 (FRONT): Lower half of the tilted orbit passing IN FRONT OF the WOS letters
+                    Canvas {
+                        id: orbitFrontCanvas
+                        anchors.fill: parent
+                        z: 3
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.reset()
+                            var s = width / 640.0
+                            var cx = 306.0 * s
+                            var cy = 142.0 * s + 1.0
+                            var rx = 214.0 * s * transitionOverlay.revealProgress
+                            var ry = 73.0 * s * transitionOverlay.revealProgress
+                            var rot = -23.5 * Math.PI / 180.0
+
+                            ctx.save()
+                            ctx.translate(cx, cy)
+                            ctx.rotate(rot)
+
+                            // Clip to front/lower half of orbit (y >= -1 in rotated ellipse space)
+                            ctx.beginPath()
+                            ctx.rect(-260 * s, -1 * s, 520 * s, 130 * s)
+                            ctx.clip()
+
+                            // Base subtle static orbit track (front)
+                            ctx.beginPath()
+                            for (var a = 0.0; a <= Math.PI * 1.02; a += 0.06) {
+                                var px = rx * Math.cos(a)
+                                var py = ry * Math.sin(a)
+                                if (a === 0.0) ctx.moveTo(px, py)
+                                else ctx.lineTo(px, py)
+                            }
+                            ctx.strokeStyle = "rgba(212, 212, 220, 0.34)"
+                            ctx.lineWidth = 1.4
+                            ctx.stroke()
+
+                            // Left-apex static highlight from animated-logo.html
+                            ctx.beginPath()
+                            for (var h = Math.PI - 0.55; h <= Math.PI + 0.05; h += 0.04) {
+                                var hx = rx * Math.cos(h)
+                                var hy = ry * Math.sin(h)
+                                if (h === Math.PI - 0.55) ctx.moveTo(hx, hy)
+                                else ctx.lineTo(hx, hy)
+                            }
+                            ctx.strokeStyle = "rgba(255, 255, 255, 0.78)"
+                            ctx.lineWidth = 2.2
+                            ctx.lineCap = "round"
+                            ctx.stroke()
+
+                            // Animated orbit sweep trail (front pass)
+                            var headAngle = transitionOverlay.orbitProgress * Math.PI * 2.0
+                            var sweepLen = Math.PI * 0.42
+                            var steps = 28
+                            for (var i = 0; i < steps; i++) {
+                                var t0 = i / steps
+                                var t1 = (i + 1) / steps
+                                var a0 = headAngle - sweepLen * (1.0 - t0)
+                                var a1 = headAngle - sweepLen * (1.0 - t1)
+
+                                // Outer Matugen primary glow along trail
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = Qt.rgba(tok.primary.r, tok.primary.g, tok.primary.b, t1 * t1 * 0.5)
+                                ctx.lineWidth = 6.0 * t1
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+
+                                // Bright white core sweep
+                                ctx.beginPath()
+                                ctx.moveTo(rx * Math.cos(a0), ry * Math.sin(a0))
+                                ctx.lineTo(rx * Math.cos(a1), ry * Math.sin(a1))
+                                ctx.strokeStyle = "rgba(255, 255, 255, " + (t1 * t1 * 0.96) + ")"
+                                ctx.lineWidth = 0.9 + 2.3 * t1
+                                ctx.lineCap = "round"
+                                ctx.stroke()
+                            }
+
+                            // Glowing comet head dot
+                            var headX = rx * Math.cos(headAngle)
+                            var headY = ry * Math.sin(headAngle)
+                            ctx.beginPath()
+                            ctx.arc(headX, headY, 2.4, 0, Math.PI * 2.0)
+                            ctx.fillStyle = "#FFFFFF"
+                            ctx.fill()
+
+                            ctx.restore()
+                        }
+                    }
+
+                    // LAYER 4: Animated 4-point Star Pulse at (476, 61) in 640x310 space (wosStarPulse)
+                    Item {
+                        id: starPulseItem
+                        readonly property real svgScale: parent.width / 640.0
+                        x: 476.0 * svgScale - width / 2
+                        y: 61.0 * svgScale + 1.0 - height / 2
+                        width: 40
+                        height: 40
+                        z: 4
+                        scale: 0.94
+                        opacity: 0.72
+
+                        SequentialAnimation on scale {
+                            running: transitionOverlay.visible
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.94; to: 1.08; duration: 1600; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.08; to: 0.94; duration: 1600; easing.type: Easing.InOutSine }
+                        }
+                        SequentialAnimation on opacity {
+                            running: transitionOverlay.visible
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.72; to: 1.0; duration: 1600; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.0; to: 0.72; duration: 1600; easing.type: Easing.InOutSine }
+                        }
+
+                        // Soft glow behind the 4-point star
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 16; height: 16; radius: 8
+                            color: "#FFFFFF"
+                            opacity: 0.28
+                        }
+
+                        Canvas {
+                            anchors.fill: parent
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.reset()
+                                ctx.translate(width / 2, height / 2)
+                                var s = starPulseItem.svgScale
+                                ctx.scale(s, s)
+                                // Exact SVG path from animated-logo.html: M 0 -19 C 1.1 -4.2, 4.2 -1.1, 19 0 ...
+                                ctx.beginPath()
+                                ctx.moveTo(0, -19)
+                                ctx.bezierCurveTo(1.1, -4.2, 4.2, -1.1, 19, 0)
+                                ctx.bezierCurveTo(4.2, 1.1, 1.1, 4.2, 0, 19)
+                                ctx.bezierCurveTo(-1.1, 4.2, -4.2, 1.1, -19, 0)
+                                ctx.bezierCurveTo(-4.2, -1.1, -1.1, -4.2, 0, -19)
+                                ctx.closePath()
+                                ctx.fillStyle = "#FFFFFF"
+                                ctx.fill()
+                            }
+                        }
+                    }
+
+                    // LAYER 5: Subtle inner star pulse inside the "O" disc cutout at (332, 140)
+                    Rectangle {
+                        readonly property real svgScale: parent.width / 640.0
+                        x: 332.0 * svgScale - width / 2
+                        y: 140.0 * svgScale + 1.0 - height / 2
+                        width: 14; height: 14; radius: 7
+                        color: tok.primary
+                        z: 4
+                        opacity: 0.0
+
+                        SequentialAnimation on opacity {
+                            running: transitionOverlay.visible
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.08; to: 0.35; duration: 1600; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 0.35; to: 0.08; duration: 1600; easing.type: Easing.InOutSine }
+                        }
+                    }
+                }
             }
 
-            // "WORLD OF SHELLS" text below logo
-            Text {
+            // 6. "WORLD OF SHELLS" title with flanking lines (matching animated-logo.html)
+            Row {
+                id: titleRow
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: logoContainer.bottom
-                anchors.topMargin: 20
-                text: "WORLD OF SHELLS"
-                color: "#9A9AA6"
-                font.pixelSize: 11
-                font.letterSpacing: 6
-                font.weight: Font.Light
-                opacity: win.transitionActive ? 0.8 : 0.0
-                Behavior on opacity { NumberAnimation { duration: 500 } }
+                anchors.topMargin: 16
+                spacing: 14
+                opacity: win.transitionActive ? 0.88 : 0.0
+                scale: win.transitionActive ? 1.0 : 0.94
+                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 36 * transitionOverlay.revealProgress
+                    height: 1
+                    color: "#8E8E98"
+                    opacity: 0.45
+                }
+
+                Text {
+                    text: "WORLD OF SHELLS"
+                    color: "#9A9AA6"
+                    font.pixelSize: 11
+                    font.letterSpacing: 6
+                    font.weight: Font.Light
+                }
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 36 * transitionOverlay.revealProgress
+                    height: 1
+                    color: "#8E8E98"
+                    opacity: 0.45
+                }
             }
 
-            // Activating text
+            // 7. Activating shell status text
             Text {
+                id: statusTransitionText
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: logoContainer.bottom
-                anchors.topMargin: 48
+                anchors.top: titleRow.bottom
+                anchors.topMargin: 16
                 text: win.statusText
-                color: "#71717A"
-                font.pixelSize: 12
-                font.weight: Font.Light
-                opacity: win.transitionActive ? 0.9 : 0.0
+                color: tok.primary
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                opacity: win.transitionActive ? 0.92 : 0.0
                 Behavior on opacity { NumberAnimation { duration: 400 } }
             }
 
-            // Loading indicator dots
-            Row {
+            // 8. Sleek 2.5s progress sweep bar + 3 pulsing dots at bottom
+            Column {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 60
-                spacing: 8
+                anchors.bottomMargin: 52
+                spacing: 14
                 opacity: win.transitionActive ? 1.0 : 0.0
                 Behavior on opacity { NumberAnimation { duration: 300 } }
 
-                Repeater {
-                    model: 3
-                    Rectangle {
-                        width: 6; height: 6; radius: 3
-                        color: "#FFFFFF"
-                        opacity: 0.4
+                // Thin 2.5s progress bar
+                Rectangle {
+                    width: 140
+                    height: 2
+                    radius: 1
+                    color: Qt.rgba(1, 1, 1, 0.12)
+                    clip: true
 
-                        SequentialAnimation on opacity {
+                    Rectangle {
+                        id: progressFill
+                        height: parent.height
+                        radius: 1
+                        color: tok.primary
+                        width: 0
+
+                        NumberAnimation on width {
                             running: win.transitionActive
-                            loops: Animation.Infinite
-                            PauseAnimation { duration: index * 200 }
-                            NumberAnimation { from: 0.4; to: 1.0; duration: 400; easing.type: Easing.InOutSine }
-                            NumberAnimation { from: 1.0; to: 0.4; duration: 400; easing.type: Easing.InOutSine }
-                            PauseAnimation { duration: (2 - index) * 200 }
+                            from: 0
+                            to: 140
+                            duration: 2450
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                }
+
+                // Loading indicator dots
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 8
+
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            width: 6; height: 6; radius: 3
+                            color: index === 1 ? tok.primary : "#FFFFFF"
+                            opacity: 0.35
+
+                            SequentialAnimation on opacity {
+                                running: transitionOverlay.visible
+                                loops: Animation.Infinite
+                                PauseAnimation { duration: index * 180 }
+                                NumberAnimation { from: 0.35; to: 1.0; duration: 380; easing.type: Easing.InOutSine }
+                                NumberAnimation { from: 1.0; to: 0.35; duration: 380; easing.type: Easing.InOutSine }
+                                PauseAnimation { duration: (2 - index) * 180 }
+                            }
+                            SequentialAnimation on scale {
+                                running: transitionOverlay.visible
+                                loops: Animation.Infinite
+                                PauseAnimation { duration: index * 180 }
+                                NumberAnimation { from: 0.85; to: 1.25; duration: 380; easing.type: Easing.InOutSine }
+                                NumberAnimation { from: 1.25; to: 0.85; duration: 380; easing.type: Easing.InOutSine }
+                                PauseAnimation { duration: (2 - index) * 180 }
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Main two-pane layout
+                // Main two-pane layout
         RowLayout {
             anchors.fill: parent
             anchors.margins: tok.sp5

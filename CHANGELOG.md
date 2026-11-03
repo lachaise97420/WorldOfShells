@@ -2,6 +2,21 @@
 
 All notable changes to World of Shells will be documented in this file.
 
+## [1.2.0] - 2026-11-03
+
+### Changed
+- **Transition overlay completely rewritten** with Gemini improvements:
+  - Canvas-based animated orbit (3.2s sweep, comet trail, Matugen primary glow)
+  - Progressive center-out reveal of the logo
+  - 9 floating particles with drift, scatter on exit (disintegration effect)
+  - 4-point star pulse animation (wosStarPulse)
+  - Inner star pulse in the O disc cutout
+  - Shockwave ring on entry/exit
+  - Multi-layered pulsing glow (white + Matugen primary)
+  - Progress bar (2.5s sweep) + 3 pulsing dots
+  - Flanking lines that grow with reveal progress
+  - All animations driven by Canvas requestPaint for 60fps
+
 ## [1.1.0] - 2026-11-03
 
 ### Added
