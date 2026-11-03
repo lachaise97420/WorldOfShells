@@ -5,6 +5,13 @@ All notable changes to World of Shells will be documented in this file.
 ## [1.4.0] - 2026-11-03
 
 ### Added
+- **Serpantinum** shell (contributed by @ilyamiro) - desktop shell for Hyprland, Sway and Niri
+- Now 21 shells total
+
+### Changed
+- Updated GitHub repo description to reflect 21 shells
+
+### Added
 - **Adaptive colors**: app reads colors from multiple sources (ryoku, wal, matugen, nucleus, etc.) and applies them automatically
 - **Custom colors file path** in Settings for universal matugen compatibility
 - **applyColors** now supports 3 formats: matugen/ryoku, MaterialUI, Pywal
